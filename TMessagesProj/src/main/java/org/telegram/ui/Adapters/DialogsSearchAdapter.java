@@ -283,6 +283,19 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
     }
 
     private boolean filter(Object obj) {
+        if (!org.telegram.messenger.vivogram.VivogramConfig.isShowingHiddenChats()) {
+            long did = 0;
+            if (obj instanceof TLRPC.User) {
+                did = ((TLRPC.User) obj).id;
+            } else if (obj instanceof TLRPC.Chat) {
+                did = -((TLRPC.Chat) obj).id;
+            } else if (obj instanceof TLRPC.EncryptedChat) {
+                did = DialogObject.makeEncryptedDialogId(((TLRPC.EncryptedChat) obj).id);
+            }
+            if (did != 0 && org.telegram.messenger.vivogram.VivogramConfig.isDialogHidden(did)) {
+                return false;
+            }
+        }
         if (dialogsType != DialogsActivity.DIALOGS_TYPE_START_ATTACH_BOT) {
             return true;
         }

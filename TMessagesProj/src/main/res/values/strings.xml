@@ -1,7 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="AppName">Telegram</string>
-    <string name="AppNameBeta">Telegram Beta</string>
+    <string name="AppName">Vivogram</string>
+    <string name="AppNameBeta">Vivogram Beta</string>
+    <string name="HiddenChatsTitle">Hidden Chats</string>
+    <string name="HiddenChatsUnlockPrompt">Enter passcode to unlock hidden chats</string>
+    <string name="HiddenChatsLock">Lock &amp; Exit</string>
+
+    <!-- Vivogram Settings & Mod Localization -->
+    <string name="VivogramSettings">Vivogram Settings</string>
+    <string name="VivogramGhostMode">Ghost Mode</string>
+    <string name="VivogramGhostModeTitle">Ghost Mode</string>
+    <string name="VivogramGhostModeDesc">Master invisible switch</string>
+    <string name="VivogramGhostReadHistory">Do Not Read Messages</string>
+    <string name="VivogramGhostReadHistoryDesc">Do not send read receipts for incoming messages</string>
+    <string name="VivogramGhostTyping">Hide Typing</string>
+    <string name="VivogramGhostTypingDesc">Hide \"typing...\" status</string>
+    <string name="VivogramGhostOnline">Hide Online Status</string>
+    <string name="VivogramGhostOnlineDesc">Do not update last seen / online presence</string>
+    <string name="VivogramGhostReadVoice">Hide Voice Playback</string>
+    <string name="VivogramGhostReadVoiceDesc">Do not mark voice and video notes as played</string>
+
+    <string name="VivogramMessagesAndHistory">Messages &amp; History</string>
+    <string name="VivogramSaveDeleted">Save Deleted Messages</string>
+    <string name="VivogramSaveDeletedDesc">Mark with 🗑 icon</string>
+    <string name="VivogramSaveEdits">Save Edit History</string>
+    <string name="VivogramSaveEditsDesc">Store text revision history with ✏ icon</string>
+    <string name="VivogramEditHistoryTitle">Edit History</string>
+
+    <string name="VivogramAntiRestrictions">Anti-Restrictions</string>
+    <string name="VivogramAllowScreenshots">Allow Screenshots</string>
+    <string name="VivogramAllowScreenshotsDesc">Bypass FLAG_SECURE screenshot and recording blocks</string>
+    <string name="VivogramSaveRestrictedMedia">Save Restricted Media</string>
+    <string name="VivogramSaveRestrictedMediaDesc">Allow forwarding, copying and saving restricted media</string>
+    <string name="VivogramInfiniteViewOnce">Infinite View-Once Media</string>
+    <string name="VivogramInfiniteViewOnceDesc">View disappearing photos and videos without countdown timer</string>
+    <string name="VivogramAutoSaveExpiringMedia">Auto-save Expiring Media</string>
+    <string name="VivogramAutoSaveExpiringMediaDesc">Automatically download view-once media to local gallery</string>
+
+    <string name="VivogramAdsAndFilters">Ads &amp; Filters</string>
+    <string name="VivogramBlockAds">Block Telegram Ads</string>
+    <string name="VivogramBlockAdsDesc">Hide sponsored channel messages</string>
+    <string name="VivogramHideReactions">Hide Reactions</string>
+    <string name="VivogramHideReactionsDesc">Do not display reaction badges under message bubbles</string>
+    <string name="VivogramSpamFilter">Spam Filter</string>
+    <string name="VivogramSpamFilterDesc">Local keyword and regex message filtration</string>
+    <string name="VivogramSpamKeywords">Spam Filter Keywords</string>
+    <string name="VivogramSpamKeywordsHint">Comma-separated keywords or r:regex</string>
+    <string name="VivogramSpamKeywordsSaved">Keywords saved</string>
+
+    <string name="VivogramQoLAndUI">Quality of Life &amp; UI</string>
+    <string name="VivogramForwardNoAuthor">Forward Without Authorship</string>
+    <string name="VivogramForwardNoAuthorDesc">Hide original author caption when forwarding</string>
+    <string name="VivogramShowSeconds">Show Seconds in Timestamp</string>
+    <string name="VivogramShowSecondsDesc">Display message time as HH:mm:ss</string>
+    <string name="VivogramConfirmSendMedia">Confirm Sending Media</string>
+    <string name="VivogramConfirmSendMediaDesc">Ask confirmation before sending stickers</string>
+    <string name="VivogramDisableStories">Disable Stories</string>
+    <string name="VivogramDisableStoriesDesc">Hide stories bar from main dialogs screen</string>
+    <string name="VivogramShowIdDc">Show ID, DC &amp; Reg Date</string>
+    <string name="VivogramShowIdDcDesc">Display technical user/chat details in profile</string>
+
+    <string name="VivogramPrivacyAndSecurity">Privacy &amp; Security</string>
+    <string name="VivogramHiddenPasscode">Passcode for Hidden Chats</string>
+    <string name="VivogramHiddenPasscodeDesc">Protect access to hidden dialogues</string>
+    <string name="VivogramPasscodeEnabled">Enabled</string>
+    <string name="VivogramPasscodeNotSet">Not Set</string>
+    <string name="VivogramSetPasscode">Set Passcode</string>
+    <string name="VivogramChangePasscode">Change Passcode</string>
+    <string name="VivogramEnterPasscodeHint">Enter digits</string>
+    <string name="VivogramPasscodeSaved">Passcode saved</string>
+    <string name="VivogramPasscodeDeleted">Passcode deleted</string>
+    <string name="VivogramRestartNotice">Restart application to apply changes</string>
+    <string name="VivogramRegDateApprox">Registration (approx.)</string>
     <string name="LanguageName">English</string>
     <string name="English">English</string>
     <string name="LanguageNameInEnglish">English</string>
@@ -2627,7 +2697,7 @@
     <string name="DirectShareInfo">Show recent chats in Android share menu</string>
     <string name="Emoji">Emoji</string>
     <string name="LargeEmoji">Large Emoji</string>
-    <string name="TelegramVersion">Telegram for Android %1$s</string>
+    <string name="TelegramVersion">Vivogram for Android %1$s</string>
     <string name="DebugMenu">Debug Menu</string>
     <string name="DebugMenuLongPress">Long press again for debug menu</string>
     <string name="DebugSendLogs">Send Logs</string>
@@ -4199,7 +4269,7 @@
     <string name="ViewMessageStatistic">Message Statistic</string>
     <string name="ViewMessage">Open Message</string>
     <!--Intro view-->
-    <string name="Page1Title">Telegram</string>
+    <string name="Page1Title">Vivogram</string>
     <string name="Page2Title">Fast</string>
     <string name="Page3Title">Free</string>
     <string name="Page4Title">Secure</string>

@@ -6699,6 +6699,9 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public boolean isChatNoForwards(TLRPC.Chat chat) {
+        if (org.telegram.messenger.vivogram.VivogramConfig.isSaveRestrictedMedia()) {
+            return false;
+        }
         if (chat == null) {
             return false;
         }
@@ -6724,6 +6727,9 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public boolean isUserNoForwards(TLRPC.UserFull userFull) {
+        if (org.telegram.messenger.vivogram.VivogramConfig.isSaveRestrictedMedia()) {
+            return false;
+        }
         if (userFull == null) {
             return false;
         }
@@ -10524,7 +10530,7 @@ public class MessagesController extends BaseController implements NotificationCe
         checkReadTasks();
 
         if (getUserConfig().isClientActivated()) {
-            if (!ignoreSetOnline && getConnectionsManager().getPauseTime() == 0 && ApplicationLoader.isScreenOn && !ApplicationLoader.mainInterfacePausedStageQueue) {
+            if (!org.telegram.messenger.vivogram.VivogramConfig.isGhostOnline() && !ignoreSetOnline && getConnectionsManager().getPauseTime() == 0 && ApplicationLoader.isScreenOn && !ApplicationLoader.mainInterfacePausedStageQueue) {
                 if (ApplicationLoader.mainInterfacePausedStageQueueTime != 0 && Math.abs(ApplicationLoader.mainInterfacePausedStageQueueTime - System.currentTimeMillis()) > 1000) {
                     if (statusSettingState != 1 && (lastStatusUpdateTime == 0 || Math.abs(System.currentTimeMillis() - lastStatusUpdateTime) >= 55000 || offlineSent)) {
                         statusSettingState = 1;
@@ -11383,6 +11389,9 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public boolean sendTyping(long dialogId, long threadMsgId, int action, String emojicon, int classGuid) {
+        if (org.telegram.messenger.vivogram.VivogramConfig.isGhostTyping()) {
+            return false;
+        }
         if (action < 0 || action >= sendingTypings.length || dialogId == 0) {
             return false;
         }
@@ -14407,7 +14416,7 @@ public class MessagesController extends BaseController implements NotificationCe
         getNotificationCenter().postNotificationName(NotificationCenter.messagesReadContent, dialogId, arrayList);
         if (messageObject.getId() < 0) {
             markMessageAsRead(messageObject.getDialogId(), messageObject.messageOwner.random_id, Integer.MIN_VALUE);
-        } else {
+        } else if (!org.telegram.messenger.vivogram.VivogramConfig.isGhostReadVoice()) {
             if (messageObject.messageOwner.peer_id.channel_id != 0) {
                 TLRPC.TL_channels_readMessageContents req = new TLRPC.TL_channels_readMessageContents();
                 req.channel = getInputChannel(messageObject.messageOwner.peer_id.channel_id);
@@ -14433,7 +14442,7 @@ public class MessagesController extends BaseController implements NotificationCe
 
     public void markMentionMessageAsRead(int mid, long channelId, long did) {
         getMessagesStorage().markMentionMessageAsRead(-channelId, mid, did);
-        if (channelId != 0) {
+        if (channelId != 0 && !org.telegram.messenger.vivogram.VivogramConfig.isGhostReadVoice()) {
             TLRPC.TL_channels_readMessageContents req = new TLRPC.TL_channels_readMessageContents();
             req.channel = getInputChannel(channelId);
             if (req.channel == null) {
@@ -14557,6 +14566,9 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     private void completeReadTask(ReadTask task) {
+        if (org.telegram.messenger.vivogram.VivogramConfig.isGhostReadHistory()) {
+            return;
+        }
         if (task.replyId != 0 && task.monoForumPeerId == 0) {
             TLRPC.TL_messages_readDiscussion req = new TLRPC.TL_messages_readDiscussion();
             req.msg_id = (int) task.replyId;
@@ -18497,6 +18509,9 @@ public class MessagesController extends BaseController implements NotificationCe
                 if (message instanceof TLRPC.TL_messageEmpty) {
                     continue;
                 }
+                if (!message.out && message.message != null && org.telegram.messenger.vivogram.VivogramConfig.checkIsSpam(message.message)) {
+                    continue;
+                }
                 if (newMessageCallback != null && newMessageCallback.onMessageReceived(message)) {
                     newMessageCallback = null;
                 }
@@ -19469,6 +19484,20 @@ public class MessagesController extends BaseController implements NotificationCe
                 }
 
                 MessageObject.getDialogId(message);
+
+                if (org.telegram.messenger.vivogram.VivogramConfig.isSaveEdits()) {
+                    MessageObject existingObj = dialogMessagesByIds.get(message.id);
+                    if (existingObj != null && existingObj.messageOwner != null && existingObj.messageOwner.message != null) {
+                        int editDate = existingObj.messageOwner.edit_date != 0 ? existingObj.messageOwner.edit_date : existingObj.messageOwner.date;
+                        org.telegram.messenger.vivogram.VivogramHistoryStorage.getInstance(currentAccount).saveMessageEdit(
+                                message.dialog_id,
+                                message.id,
+                                editDate,
+                                existingObj.messageOwner.message,
+                                existingObj.messageOwner.entities
+                        );
+                    }
+                }
 
                 ConcurrentHashMap<Long, Integer> read_max = message.out ? dialogs_read_outbox_max : dialogs_read_inbox_max;
                 Integer value = read_max.get(message.dialog_id);
@@ -21088,13 +21117,29 @@ public class MessagesController extends BaseController implements NotificationCe
                 }
             }
             if (deletedMessagesFinal != null) {
+                int currentTimeVivogram = (int) (System.currentTimeMillis() / 1000);
                 for (int a = 0, size = deletedMessagesFinal.size(); a < size; a++) {
                     long dialogId = deletedMessagesFinal.keyAt(a);
                     ArrayList<Integer> arrayList = deletedMessagesFinal.valueAt(a);
                     if (arrayList == null) {
                         continue;
                     }
-                    getNotificationCenter().postNotificationName(NotificationCenter.messagesDeleted, arrayList, -dialogId, false);
+                    if (org.telegram.messenger.vivogram.VivogramConfig.isSaveDeleted()) {
+                        for (int b = 0, size2 = arrayList.size(); b < size2; b++) {
+                            int msgId = arrayList.get(b);
+                            org.telegram.messenger.vivogram.VivogramHistoryStorage.getInstance(currentAccount).markMessageDeleted(dialogId, msgId, currentTimeVivogram);
+                            MessageObject obj = dialogMessagesByIds.get(msgId);
+                            if (obj != null) {
+                                obj.isVivogramDeleted = true;
+                                obj.vivogramDeletedDate = currentTimeVivogram;
+                            }
+                        }
+                    }
+                    if (!org.telegram.messenger.vivogram.VivogramConfig.isSaveDeleted()) {
+                        getNotificationCenter().postNotificationName(NotificationCenter.messagesDeleted, arrayList, -dialogId, false);
+                    } else {
+                        getNotificationCenter().postNotificationName(NotificationCenter.didUpdateMessagesViews, arrayList);
+                    }
                     if (dialogId == 0) {
                         for (int b = 0, size2 = arrayList.size(); b < size2; b++) {
                             Integer id = arrayList.get(b);
@@ -21103,7 +21148,12 @@ public class MessagesController extends BaseController implements NotificationCe
                                 if (BuildVars.LOGS_ENABLED) {
                                     FileLog.d("mark messages " + obj.getId() + " deleted");
                                 }
-                                obj.deleted = true;
+                                if (org.telegram.messenger.vivogram.VivogramConfig.isSaveDeleted()) {
+                                    obj.isVivogramDeleted = true;
+                                    obj.vivogramDeletedDate = currentTimeVivogram;
+                                } else {
+                                    obj.deleted = true;
+                                }
                             }
                         }
                     } else {
@@ -21610,6 +21660,9 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public SponsoredMessagesInfo getSponsoredMessages(long dialogId) {
+        if (org.telegram.messenger.vivogram.VivogramConfig.isBlockTelegramAds()) {
+            return null;
+        }
         SponsoredMessagesInfo info = sponsoredMessages.get(dialogId);
         if (info != null && (info.loading || Math.abs(SystemClock.elapsedRealtime() - info.loadTime) <= 5 * 60 * 1000)) {
             return info;
@@ -23673,6 +23726,9 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public boolean storiesEnabled() {
+        if (org.telegram.messenger.vivogram.VivogramConfig.isDisableStories()) {
+            return false;
+        }
         switch (storiesPosting) {
             case "premium":
                 return getUserConfig().isPremium();

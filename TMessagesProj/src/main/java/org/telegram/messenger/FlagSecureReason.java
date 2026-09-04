@@ -64,7 +64,7 @@ public class FlagSecureReason {
             return;
         }
 
-        if (isSecuredNow(window)) {
+        if (isSecuredNow(window) && !org.telegram.messenger.vivogram.VivogramConfig.isAllowScreenshots()) {
             window.addFlags(WindowManager.LayoutParams.FLAG_SECURE);
             AndroidUtilities.logFlagSecure();
         } else {

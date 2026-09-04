@@ -223,6 +223,8 @@ public class MessageObject {
     public int dateKeyInt;
     public String monthKey;
     public boolean deleted;
+    public boolean isVivogramDeleted;
+    public int vivogramDeletedDate;
     public boolean deletedByThanos;
     public float audioProgress;
     public float forceSeekTo = -1;
@@ -703,7 +705,7 @@ public class MessageObject {
     }
 
     public boolean shouldDrawReactions() {
-        if (isRepostPreview) {
+        if (isRepostPreview || org.telegram.messenger.vivogram.VivogramConfig.isHideReactions()) {
             return false;
         }
         return true;
@@ -9842,7 +9844,21 @@ public class MessageObject {
     }
 
     public boolean isEdited() {
+        if (org.telegram.messenger.vivogram.VivogramConfig.isSaveEdits() && org.telegram.messenger.vivogram.VivogramHistoryStorage.getInstance(currentAccount).hasMessageEdits(getDialogId(), getId())) {
+            return true;
+        }
         return messageOwner != null && (messageOwner.flags & TLRPC.MESSAGE_FLAG_EDITED) != 0 && messageOwner.edit_date != 0 && !messageOwner.edit_hide;
+    }
+
+    public boolean isVivogramDeleted() {
+        if (isVivogramDeleted) {
+            return true;
+        }
+        if (org.telegram.messenger.vivogram.VivogramConfig.isSaveDeleted() && org.telegram.messenger.vivogram.VivogramHistoryStorage.getInstance(currentAccount).isMessageDeleted(getDialogId(), getId())) {
+            isVivogramDeleted = true;
+            return true;
+        }
+        return false;
     }
 
     public boolean isContentUnread() {
@@ -11597,8 +11613,8 @@ public class MessageObject {
 
     public boolean canForwardMessage() {
         if (isQuickReply()) return false;
-        if (type == TYPE_GIFT_STARS || type == TYPE_GIFT_THEME_UPDATE || type == TYPE_SUGGEST_BIRTHDAY || type == TYPE_GIFT_OFFER || type == TYPE_SHARING_OFFER || type == TYPE_COMMUNITY_CHANGED) return false;
-        return !(messageOwner instanceof TLRPC.TL_message_secret) && !needDrawBluredPreview() && !isLiveLocation() && type != MessageObject.TYPE_PHONE_CALL && !isSponsored() && !messageOwner.noforwards;
+        boolean nofwd = messageOwner.noforwards && !org.telegram.messenger.vivogram.VivogramConfig.isSaveRestrictedMedia();
+        return !(messageOwner instanceof TLRPC.TL_message_secret) && !needDrawBluredPreview() && !isLiveLocation() && type != MessageObject.TYPE_PHONE_CALL && !isSponsored() && !nofwd;
     }
 
     public boolean canEditMedia() {

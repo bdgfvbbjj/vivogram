@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="AppName">Telegram</string>
-    <string name="AppNameBeta">Telegram Beta</string>
+    <string name="AppName">Vivogram</string>
+    <string name="AppNameBeta">Vivogram Beta</string>
+    <string name="TelegramVersion">Vivogram для Android %1$s</string>
+    <string name="HiddenChatsTitle">Скрытые чаты</string>
+    <string name="HiddenChatsUnlockPrompt">Введите код-пароль доступа</string>
+    <string name="HiddenChatsLock">Заблокировать и выйти</string>
     <string name="LanguageName">Русский</string>
     <string name="English">Английский</string>
     <string name="LanguageNameInEnglish">Russian</string>
@@ -209,18 +213,18 @@
     <string name="CheckYourNewEmailSubtitle">Введите код, который пришёл на указанный Вами адрес %1$s.</string>
     <string name="LoginOrSingInWithGoogle">или</string>
     <!--Intro view-->
-    <string name="Page1Title">Telegram</string>
+    <string name="Page1Title">Vivogram</string>
     <string name="Page2Title">Быстрый</string>
     <string name="Page3Title">Бесплатный</string>
     <string name="Page4Title">Безопасный</string>
     <string name="Page5Title">Мощный</string>
     <string name="Page6Title">Облачный</string>
     <string name="Page1Message">Самый **быстрый** мессенджер в мире.\n**Бесплатный** и **безопасный**.</string>
-    <string name="Page2Message">**Telegram** доставляет сообщения быстрее\nлюбого другого приложения.</string>
-    <string name="Page3Message">**Telegram** предоставляет бесплатное безлимитное облачное хранилище для чатов и медиа.\n</string>
-    <string name="Page4Message">**Telegram** защищает Вашу переписку от злоумышленников.</string>
-    <string name="Page5Message">**Telegram** не ограничивает размер\n Ваших медиафайлов и чатов.</string>
-    <string name="Page6Message">В **Telegram** можно переписываться с любого количества устройств.</string>
+    <string name="Page2Message">**Vivogram** доставляет сообщения быстрее\nлюбого другого приложения.</string>
+    <string name="Page3Message">**Vivogram** предоставляет бесплатное безлимитное облачное хранилище для чатов и медиа.\n</string>
+    <string name="Page4Message">**Vivogram** защищает Вашу переписку от злоумышленников.</string>
+    <string name="Page5Message">**Vivogram** не ограничивает размер\n Ваших медиафайлов и чатов.</string>
+    <string name="Page6Message">В **Vivogram** можно переписываться с любого количества устройств.</string>
     <string name="StartMessaging">Начать общение</string>
     <!--date formatters-->
     <string name="formatterBoostExpired">dd MMM yyyy</string>
@@ -263,4 +267,71 @@
     <string name="RemindTodayAt">\'Отправить сегодня в\' HH:mm</string>
     <string name="RemindDayAt">\'Отправить\' d MMM \'в\' HH:mm</string>
     <string name="RemindDayYearAt">\'Напомнить\' d MMM yyyy \'в\' HH:mm</string>
+
+    <!-- Vivogram Settings & Mod Localization -->
+    <string name="VivogramSettings">Настройки Vivogram</string>
+    <string name="VivogramGhostMode">Режим «Призрак»</string>
+    <string name="VivogramGhostModeTitle">Режим призрака</string>
+    <string name="VivogramGhostModeDesc">Мастер-переключатель невидимки</string>
+    <string name="VivogramGhostReadHistory">Не читать сообщения</string>
+    <string name="VivogramGhostReadHistoryDesc">Не отправлять статус прочтения входящих</string>
+    <string name="VivogramGhostTyping">Скрыть набор текста</string>
+    <string name="VivogramGhostTypingDesc">Скрывать статус «печатает...»</string>
+    <string name="VivogramGhostOnline">Скрыть статус «В сети»</string>
+    <string name="VivogramGhostOnlineDesc">Не обновлять статус активности онлайн</string>
+    <string name="VivogramGhostReadVoice">Скрыть прослушивание аудио</string>
+    <string name="VivogramGhostReadVoiceDesc">Не отмечать голосовые и видеосообщения прослушанными</string>
+
+    <string name="VivogramMessagesAndHistory">Сообщения и история</string>
+    <string name="VivogramSaveDeleted">Сохранять удаленные</string>
+    <string name="VivogramSaveDeletedDesc">Помечать значком 🗑</string>
+    <string name="VivogramSaveEdits">Сохранять историю правок</string>
+    <string name="VivogramSaveEditsDesc">Хранить ревизии текста со значком ✏</string>
+    <string name="VivogramEditHistoryTitle">История изменений</string>
+
+    <string name="VivogramAntiRestrictions">Обход ограничений</string>
+    <string name="VivogramAllowScreenshots">Разрешить скриншоты</string>
+    <string name="VivogramAllowScreenshotsDesc">Снять запрет снимков и записи экрана</string>
+    <string name="VivogramSaveRestrictedMedia">Сохранение защищенного медиа</string>
+    <string name="VivogramSaveRestrictedMediaDesc">Разрешить копирование, пересылку и скачивание</string>
+    <string name="VivogramInfiniteViewOnce">Бесконечные View-Once медиа</string>
+    <string name="VivogramInfiniteViewOnceDesc">Просмотр одноразовых фото и видео без таймера</string>
+    <string name="VivogramAutoSaveExpiringMedia">Автосохранение исчезающих медиа</string>
+    <string name="VivogramAutoSaveExpiringMediaDesc">Автоматически сохранять таймерные медиа в галерею</string>
+
+    <string name="VivogramAdsAndFilters">Реклама и фильтрация</string>
+    <string name="VivogramBlockAds">Блокировка рекламы</string>
+    <string name="VivogramBlockAdsDesc">Отключить спонсированные сообщения Telegram</string>
+    <string name="VivogramHideReactions">Скрыть реакции</string>
+    <string name="VivogramHideReactionsDesc">Не отображать блок реакций под сообщениями</string>
+    <string name="VivogramSpamFilter">Спам-фильтр</string>
+    <string name="VivogramSpamFilterDesc">Локальная фильтрация сообщений по ключевым словам</string>
+    <string name="VivogramSpamKeywords">Ключевые слова спам-фильтра</string>
+    <string name="VivogramSpamKeywordsHint">Слова через запятую или с префиксом r:regex</string>
+    <string name="VivogramSpamKeywordsSaved">Ключевые слова сохранены</string>
+
+    <string name="VivogramQoLAndUI">Удобство и интерфейс</string>
+    <string name="VivogramForwardNoAuthor">Пересылка без авторства</string>
+    <string name="VivogramForwardNoAuthorDesc">Скрывать имя отправителя при пересылке</string>
+    <string name="VivogramShowSeconds">Секунды во времени</string>
+    <string name="VivogramShowSecondsDesc">Отображать время сообщений с секундами (HH:mm:ss)</string>
+    <string name="VivogramConfirmSendMedia">Подтверждение отправки</string>
+    <string name="VivogramConfirmSendMediaDesc">Запрашивать подтверждение перед отправкой стикеров</string>
+    <string name="VivogramDisableStories">Отключить истории</string>
+    <string name="VivogramDisableStoriesDesc">Скрыть блок историй из главного экрана</string>
+    <string name="VivogramShowIdDc">Показывать ID, DC и дату регистрации</string>
+    <string name="VivogramShowIdDcDesc">Отображать информацию в профиле</string>
+
+    <string name="VivogramPrivacyAndSecurity">Приватность и безопасность</string>
+    <string name="VivogramHiddenPasscode">Пин-код для скрытых чатов</string>
+    <string name="VivogramHiddenPasscodeDesc">Защита доступа к скрытым диалогам</string>
+    <string name="VivogramPasscodeEnabled">Включен</string>
+    <string name="VivogramPasscodeNotSet">Не задан</string>
+    <string name="VivogramSetPasscode">Установить пин-код</string>
+    <string name="VivogramChangePasscode">Изменить пин-код</string>
+    <string name="VivogramEnterPasscodeHint">Введите пин-код (цифры)</string>
+    <string name="VivogramPasscodeSaved">Пин-код сохранен</string>
+    <string name="VivogramPasscodeDeleted">Пин-код удален</string>
+    <string name="VivogramRestartNotice">Перезапустите приложение для применения</string>
+    <string name="VivogramRegDateApprox">Регистрация (прибл.)</string>
 </resources>

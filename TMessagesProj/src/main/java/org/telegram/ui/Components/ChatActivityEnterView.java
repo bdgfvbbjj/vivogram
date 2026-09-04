@@ -12543,11 +12543,22 @@ public class ChatActivityEnterView extends FrameLayout implements
                         emojiView.closeSearch(true);
                         emojiView.hideSearchKeyboard();
                     }
-                    setStickersExpanded(false, true, false);
-                    final TL_stories.StoryItem storyItem = delegate != null ? delegate.getReplyToStory() : null;
-                    SendMessagesHelper.getInstance(currentAccount).sendSticker(sticker, query, dialog_id, replyingMessageObject, getThreadMessage(), storyItem, replyingQuote, sendAnimationData, notify, scheduleDate, scheduleRepeatPeriod, parent instanceof TLRPC.TL_messages_stickerSet, parent, parentFragment != null ? parentFragment.getMessageChatSendParams() : null, stars, getSendMonoForumPeerId(), getSendMessageSuggestionParams());
-                    if (delegate != null) {
-                        delegate.onMessageSend(null, true, scheduleDate, 0, 0);
+                    final Runnable sendStickerRunnable = () -> {
+                        final TL_stories.StoryItem storyItem = delegate != null ? delegate.getReplyToStory() : null;
+                        SendMessagesHelper.getInstance(currentAccount).sendSticker(sticker, query, dialog_id, replyingMessageObject, getThreadMessage(), storyItem, replyingQuote, sendAnimationData, notify, scheduleDate, scheduleRepeatPeriod, parent instanceof TLRPC.TL_messages_stickerSet, parent, parentFragment != null ? parentFragment.getMessageChatSendParams() : null, stars, getSendMonoForumPeerId(), getSendMessageSuggestionParams());
+                        if (delegate != null) {
+                            delegate.onMessageSend(null, true, scheduleDate, 0, 0);
+                        }
+                    };
+                    if (org.telegram.messenger.vivogram.VivogramConfig.isConfirmSendMedia() && parentActivity != null) {
+                        new org.telegram.ui.ActionBar.AlertDialog.Builder(parentActivity, resourcesProvider)
+                                .setTitle(LocaleController.getString(R.string.AppName))
+                                .setMessage("Отправить стикер?")
+                                .setPositiveButton(LocaleController.getString(R.string.Send), (dialog, which) -> sendStickerRunnable.run())
+                                .setNegativeButton(LocaleController.getString(R.string.Cancel), null)
+                                .show();
+                    } else {
+                        sendStickerRunnable.run();
                     }
                     if (clearsInputField) {
                         setFieldText("");

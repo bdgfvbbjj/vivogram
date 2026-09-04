@@ -18458,13 +18458,13 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         } else if (currentMessageObject.scheduled && currentMessageObject.messageOwner.date == 0x7FFFFFFE) {
             timeString = "";
         } else if (currentMessageObject.realDate != 0) {
-            timeString = LocaleController.formatSmallDateChat(currentMessageObject.realDate) + ", " + LocaleController.getInstance().getFormatterDay().format((long) (currentMessageObject.realDate) * 1000);
+            timeString = LocaleController.formatSmallDateChat(currentMessageObject.realDate) + ", " + (org.telegram.messenger.vivogram.VivogramConfig.isShowSeconds() ? LocaleController.getInstance().getFormatterDayWithSeconds() : LocaleController.getInstance().getFormatterDay()).format((long) (currentMessageObject.realDate) * 1000);
         } else if (currentMessageObject.isRepostPreview) {
-            timeString = LocaleController.formatSmallDateChat(messageObject.messageOwner.date) + ", " + LocaleController.getInstance().getFormatterDay().format((long) (messageObject.messageOwner.date) * 1000);
+            timeString = LocaleController.formatSmallDateChat(messageObject.messageOwner.date) + ", " + (org.telegram.messenger.vivogram.VivogramConfig.isShowSeconds() ? LocaleController.getInstance().getFormatterDayWithSeconds() : LocaleController.getInstance().getFormatterDay()).format((long) (messageObject.messageOwner.date) * 1000);
         } else if (edited) {
             timeString = AppGlobalConfig.getInstance(currentAccount).messagePrimaryEditedDate.get() ?
                 LocaleController.formatPmEditedDate(currentMessagesGroup != null ? currentMessagesGroup.getMaxEditDate() : messageObject.messageOwner.edit_date) :
-                (getString(R.string.EditedMessage) + " " + LocaleController.getInstance().getFormatterDay().format((long) (messageObject.messageOwner.date) * 1000));
+                (getString(R.string.EditedMessage) + " " + (org.telegram.messenger.vivogram.VivogramConfig.isShowSeconds() ? LocaleController.getInstance().getFormatterDayWithSeconds() : LocaleController.getInstance().getFormatterDay()).format((long) (messageObject.messageOwner.date) * 1000));
         } else if (currentMessageObject.isSaved && currentMessageObject.messageOwner.fwd_from != null && (currentMessageObject.messageOwner.fwd_from.date != 0 || currentMessageObject.messageOwner.fwd_from.saved_date != 0)) {
             int date = currentMessageObject.messageOwner.fwd_from.saved_date;
             if (date == 0) {
@@ -18472,7 +18472,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             }
             timeString = LocaleController.formatSeenDate(date);
         } else {
-            timeString = LocaleController.getInstance().getFormatterDay().format((long) (messageObject.messageOwner.date) * 1000);
+            timeString = (org.telegram.messenger.vivogram.VivogramConfig.isShowSeconds() ? LocaleController.getInstance().getFormatterDayWithSeconds() : LocaleController.getInstance().getFormatterDay()).format((long) (messageObject.messageOwner.date) * 1000);
         }
         if (currentMessageObject.messageOwner.video_processing_pending) {
             timeString = formatString(R.string.ScheduledTimeApprox, timeString);
@@ -18516,6 +18516,11 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             } else {
                 currentTimeString = TextUtils.concat(formatString(R.string.MessageScheduledRepeatSeconds, period), ", ", currentTimeString);
             }
+        }
+        if (currentMessageObject.isVivogramDeleted()) {
+            currentTimeString = TextUtils.concat("🗑 ", currentTimeString);
+        } else if (currentMessageObject.isEdited()) {
+            currentTimeString = TextUtils.concat("✏ ", currentTimeString);
         }
         timeTextWidth = timeWidth = (int) Math.ceil(Theme.chat_timePaint.measureText(currentTimeString, 0, currentTimeString == null ? 0 : currentTimeString.length()));
         if (currentMessageObject.scheduled && currentMessageObject.messageOwner.date == 0x7FFFFFFE || currentMessageObject.notime) {

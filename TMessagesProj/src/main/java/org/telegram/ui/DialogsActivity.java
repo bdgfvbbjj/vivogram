@@ -3517,12 +3517,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             } else {
                 statusDrawable = new AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable(null, dp(26));
                 statusDrawable.center = true;
-                logoDrawable = context.getResources().getDrawable(R.drawable.telegram_logo_2).mutate();
-                logoDrawable.setBounds(0, dp(2), logoDrawable.getIntrinsicWidth(), dp(2) + logoDrawable.getIntrinsicHeight());
-                logoDrawable.setColorFilter(getThemedColor(Theme.key_telegram_color_dialogsLogo), PorterDuff.Mode.MULTIPLY);
-                SpannableStringBuilder ssb = new SpannableStringBuilder(getString(R.string.AppName));
-                ssb.setSpan(new ImageSpan(logoDrawable), 0, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                SpannableStringBuilder ssb = new SpannableStringBuilder(org.telegram.messenger.vivogram.VivogramConfig.isShowingHiddenChats() ? "Скрытые чаты" : getString(R.string.AppName));
                 actionBar.setTitle(ssb, statusDrawable);
+                if (org.telegram.messenger.vivogram.VivogramConfig.isShowingHiddenChats()) {
+                    actionBar.setBackButtonImage(R.drawable.ic_ab_back);
+                }
                 updateStatus(UserConfig.getInstance(currentAccount).getCurrentUser(), false);
             }
             if (folderId == 0) {
@@ -3897,6 +3896,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         } else {
                             hideActionMode(true);
                         }
+                    } else if (org.telegram.messenger.vivogram.VivogramConfig.isShowingHiddenChats()) {
+                        org.telegram.messenger.vivogram.VivogramConfig.setShowingHiddenChats(false);
+                        updateHiddenChatsState();
                     } else if (onlySelect || folderId != 0 || communityId != 0) {
                         finishFragment();
                     }
@@ -5352,6 +5354,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (hasMainTabs) {
             actionBar.getTitlesContainer().setTranslationX(dp(4));
             actionBar.setTitleColor(getThemedColor(Theme.key_telegram_color_dialogsLogo));
+        }
+
+        if (actionBar.getTitlesContainer() != null) {
+            actionBar.getTitlesContainer().setOnLongClickListener(v -> {
+                promptHiddenChatsPasscode();
+                return true;
+            });
         }
 
         if (folderId != 0 || communityId != 0) {
@@ -7264,6 +7273,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 viewPages[a].dialogsAdapter.pause();
             }
         }
+        if (org.telegram.messenger.vivogram.VivogramConfig.isShowingHiddenChats()) {
+            org.telegram.messenger.vivogram.VivogramConfig.setShowingHiddenChats(false);
+            updateHiddenChatsState();
+        }
     }
 
     @Override
@@ -8792,6 +8805,36 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 finishPreviewFragment();
             });
             previewMenu[0].addView(muteItem);
+        }
+
+        if (!isCommunityCell) {
+            ActionBarMenuSubItem hideItem = new ActionBarMenuSubItem(getParentActivity(), false, false);
+            boolean isHidden = org.telegram.messenger.vivogram.VivogramConfig.isDialogHidden(dialogId);
+            if (isHidden) {
+                hideItem.setTextAndIcon("Показать чат", R.drawable.msg_secret);
+            } else {
+                hideItem.setTextAndIcon("Скрыть чат", R.drawable.msg_secret);
+            }
+            hideItem.setMinimumWidth(160);
+            hideItem.setOnClickListener(e -> {
+                finishPreviewFragment();
+                boolean currentlyHidden = org.telegram.messenger.vivogram.VivogramConfig.isDialogHidden(dialogId);
+                org.telegram.messenger.vivogram.VivogramConfig.setDialogHidden(dialogId, !currentlyHidden);
+                if (getMessagesController() != null) {
+                    getMessagesController().sortDialogs(null);
+                }
+                updateDialogIndices();
+                updateVisibleRows(MessagesController.UPDATE_MASK_ALL);
+                if (viewPages != null) {
+                    for (int a = 0; a < viewPages.length; a++) {
+                        if (viewPages[a].dialogsAdapter != null) {
+                            viewPages[a].dialogsAdapter.notifyDataSetChanged();
+                        }
+                    }
+                }
+                BulletinFactory.of(DialogsActivity.this).createSimpleBulletin(R.drawable.msg_secret, currentlyHidden ? "Чат восстановлен" : "Чат скрыт").show();
+            });
+            previewMenu[0].addView(hideItem);
         }
 
         if (!isCommunityCell) {
@@ -10998,7 +11041,26 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
         MessagesController messagesController = AccountInstance.getInstance(currentAccount).getMessagesController();
         if (dialogsType == DIALOGS_TYPE_DEFAULT) {
-            return messagesController.getDialogs(folderId);
+            ArrayList<TLRPC.Dialog> original = messagesController.getDialogs(folderId);
+            if (org.telegram.messenger.vivogram.VivogramConfig.hasHiddenChats()) {
+                boolean showingHidden = org.telegram.messenger.vivogram.VivogramConfig.isShowingHiddenChats();
+                ArrayList<TLRPC.Dialog> filtered = new ArrayList<>();
+                for (int i = 0; i < original.size(); i++) {
+                    TLRPC.Dialog d = original.get(i);
+                    boolean isHidden = org.telegram.messenger.vivogram.VivogramConfig.isDialogHidden(d.id);
+                    if (showingHidden) {
+                        if (isHidden) {
+                            filtered.add(d);
+                        }
+                    } else {
+                        if (!isHidden) {
+                            filtered.add(d);
+                        }
+                    }
+                }
+                return filtered;
+            }
+            return original;
         } else if (dialogsType == DIALOGS_TYPE_WIDGET || dialogsType == DIALOGS_TYPE_IMPORT_HISTORY) {
             return messagesController.dialogsServerOnly;
         } else if (dialogsType == DIALOGS_TYPE_ADD_USERS_TO) {
@@ -14431,6 +14493,86 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         o.show();
 
         return true;
+    }
+
+    private void promptHiddenChatsPasscode() {
+        if (!org.telegram.messenger.vivogram.VivogramConfig.hasHiddenPasscode()) {
+            boolean newState = !org.telegram.messenger.vivogram.VivogramConfig.isShowingHiddenChats();
+            org.telegram.messenger.vivogram.VivogramConfig.setShowingHiddenChats(newState);
+            updateHiddenChatsState();
+            BulletinFactory.of(this).createSimpleBulletin(
+                    R.drawable.msg_shield,
+                    newState ? "Скрытые чаты: режим включен" : "Скрытые чаты: режим выключен"
+            ).show();
+            return;
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+        builder.setTitle("Скрытые чаты");
+        builder.setMessage("Введите пин-код для " + (org.telegram.messenger.vivogram.VivogramConfig.isShowingHiddenChats() ? "выхода из режима" : "доступа к скрытым чатам"));
+
+        final android.widget.EditText input = new android.widget.EditText(getParentActivity());
+        input.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD);
+        input.setHint("Пин-код");
+        input.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 16);
+        input.setTextColor(getThemedColor(Theme.key_dialogTextBlack));
+        input.setHintTextColor(getThemedColor(Theme.key_dialogTextHint));
+
+        android.widget.FrameLayout frameLayout = new android.widget.FrameLayout(getParentActivity());
+        frameLayout.setPadding(dp(24), dp(8), dp(24), 0);
+        frameLayout.addView(input, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        builder.setView(frameLayout);
+
+        builder.setPositiveButton(LocaleController.getString(R.string.OK), (dialog, which) -> {
+            String code = input.getText().toString().trim();
+            if (org.telegram.messenger.vivogram.VivogramConfig.checkHiddenPasscode(code)) {
+                boolean newState = !org.telegram.messenger.vivogram.VivogramConfig.isShowingHiddenChats();
+                org.telegram.messenger.vivogram.VivogramConfig.setShowingHiddenChats(newState);
+                updateHiddenChatsState();
+                BulletinFactory.of(this).createSimpleBulletin(
+                        R.drawable.msg_shield,
+                        newState ? "Скрытые чаты: режим включен" : "Скрытые чаты: режим выключен"
+                ).show();
+            } else {
+                BulletinFactory.of(this).createErrorBulletin("Неверный пин-код").show();
+            }
+        });
+        builder.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
+        showDialog(builder.create());
+    }
+
+    private void updateHiddenChatsState() {
+        if (actionBar != null) {
+            boolean isHidden = org.telegram.messenger.vivogram.VivogramConfig.isShowingHiddenChats();
+            if (isHidden) {
+                actionBar.setBackButtonImage(R.drawable.ic_ab_back);
+                actionBar.setTitle("Скрытые чаты");
+            } else {
+                if (folderId == 0 && communityId == 0 && !onlySelect) {
+                    actionBar.setBackButtonDrawable(null);
+                    SpannableStringBuilder ssb = new SpannableStringBuilder(getString(R.string.AppName));
+                    actionBar.setTitle(ssb, statusDrawable);
+                } else if (onlySelect) {
+                    actionBar.setBackButtonImage(R.drawable.ic_ab_back);
+                } else {
+                    actionBar.setBackButtonDrawable(backDrawable = new BackDrawable(false));
+                }
+            }
+        }
+        updateDialogsList();
+    }
+
+    private void updateDialogsList() {
+        if (dialogsAdapter != null) {
+            dialogsAdapter.notifyDataSetChanged();
+        }
+        if (viewPages != null) {
+            for (ViewPage page : viewPages) {
+                if (page != null && page.listView != null && page.listView.getAdapter() != null) {
+                    page.listView.getAdapter().notifyDataSetChanged();
+                }
+            }
+        }
     }
 
 }

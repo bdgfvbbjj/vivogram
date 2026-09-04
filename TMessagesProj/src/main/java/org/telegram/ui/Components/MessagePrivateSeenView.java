@@ -138,6 +138,15 @@ public class MessagePrivateSeenView extends FrameLayout {
             valueTextView.setText(AppGlobalConfig.getInstance(currentAccount).messagePrimaryEditedDate.get() ?
                 LocaleController.formatPmSentDate(sent_date):
                 LocaleController.formatPmEditedDate(edit_date));
+            if (messageObject != null && org.telegram.messenger.vivogram.VivogramConfig.isSaveEdits() && org.telegram.messenger.vivogram.VivogramHistoryStorage.getInstance(currentAccount).hasMessageEdits(messageObject.getDialogId(), messageObject.getId())) {
+                setBackground(Theme.createRadSelectorDrawable(Theme.getColor(Theme.key_listSelector, resourcesProvider), 6, 0));
+                setOnClickListener(v -> {
+                    if (dismiss != null) {
+                        dismiss.run();
+                    }
+                    new org.telegram.ui.vivogram.VivogramEditHistorySheet(getContext(), messageObject).show();
+                });
+            }
             return;
         } else if (type == TYPE_FORWARD) {
             valueLayout.setAlpha(1f);
