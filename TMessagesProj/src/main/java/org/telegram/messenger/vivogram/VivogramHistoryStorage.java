@@ -1,4 +1,4 @@
-﻿package org.telegram.messenger.vivogram;
+package org.telegram.messenger.vivogram;
 
 import android.content.ContentValues;
 import android.database.Cursor;

@@ -1,4 +1,4 @@
-﻿package org.telegram.ui.vivogram;
+package org.telegram.ui.vivogram;
 
 import android.content.Context;
 import android.graphics.Canvas;
