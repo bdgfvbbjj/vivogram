@@ -73,8 +73,10 @@ public class HiddenDialogsActivity extends DialogsActivity {
     }
 
     @Override
-    public boolean onBackPressed() {
-        exitHiddenMode();
+    public boolean onBackPressed(boolean invoked) {
+        if (invoked) {
+            exitHiddenMode();
+        }
         return false;
     }
 }
