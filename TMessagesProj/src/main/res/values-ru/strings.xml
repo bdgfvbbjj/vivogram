@@ -6,6 +6,14 @@
     <string name="HiddenChatsTitle">Скрытые чаты</string>
     <string name="HiddenChatsUnlockPrompt">Введите код-пароль доступа</string>
     <string name="HiddenChatsLock">Заблокировать и выйти</string>
+    <string name="AppIconDefault">💎 Neon Blue</string>
+    <string name="AppIconSunset">🍂 Sunset Gold</string>
+    <string name="AppIconRose">🌸 Rose Pastel</string>
+    <string name="AppIconMint">🌿 Mint Cyan</string>
+    <string name="AppIconGlacier">❄️ Glacier Sky</string>
+    <string name="AppIconRoyal">👑 Royal Indigo</string>
+    <string name="AppIconMidnight">🌑 Midnight Dark</string>
+    <string name="AppIconCarbon">⚡ Carbon Graphite</string>
     <string name="LanguageName">Русский</string>
     <string name="English">Английский</string>
     <string name="LanguageNameInEnglish">Russian</string>
@@ -298,6 +306,8 @@
     <string name="VivogramInfiniteViewOnceDesc">Просмотр одноразовых фото и видео без таймера</string>
     <string name="VivogramAutoSaveExpiringMedia">Автосохранение исчезающих медиа</string>
     <string name="VivogramAutoSaveExpiringMediaDesc">Автоматически сохранять таймерные медиа в галерею</string>
+    <string name="VivogramFastDownload">Ускоренная загрузка (8 потоков)</string>
+    <string name="VivogramFastDownloadDesc">Снимает локальные ограничения скорости, устраняет задержку запуска видео и задействует 8 параллельных потоков.</string>
 
     <string name="VivogramAdsAndFilters">Реклама и фильтрация</string>
     <string name="VivogramBlockAds">Блокировка рекламы</string>

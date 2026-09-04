@@ -42,7 +42,18 @@ public class PremiumAppIconsPreviewView extends FrameLayout implements PagerHead
         }
 
         if (icons.size() < 3) {
-            FileLog.e(new IllegalArgumentException("There should be at least 3 premium icons!"));
+            for (LauncherIconController.LauncherIcon icon : LauncherIconController.LauncherIcon.values()) {
+                if (!icons.contains(icon)) {
+                    icons.add(icon);
+                }
+                if (icons.size() == 3) {
+                    break;
+                }
+            }
+        }
+
+        if (icons.size() < 3) {
+            FileLog.e(new IllegalArgumentException("There should be at least 3 icons!"));
             isEmpty = true;
             return;
         }
@@ -59,9 +70,9 @@ public class PremiumAppIconsPreviewView extends FrameLayout implements PagerHead
         AdaptiveIconImageView iconImageView = new AdaptiveIconImageView(ctx, i);
         iconImageView.setLayoutParams(LayoutHelper.createFrame(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER, 0, 52, 0, 0));
         iconImageView.setForeground(icon.foreground);
-        iconImageView.setBackgroundResource(icon.background);
+        iconImageView.setImageResource(icon.background);
         iconImageView.setPadding(AndroidUtilities.dp(8));
-        iconImageView.setBackgroundOuterPadding(AndroidUtilities.dp(32));
+        iconImageView.setBackgroundOuterPadding(0);
         addView(iconImageView);
         return iconImageView;
     }

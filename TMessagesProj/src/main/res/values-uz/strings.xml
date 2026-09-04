@@ -42,6 +42,8 @@
     <string name="VivogramInfiniteViewOnceDesc">Bir martalik foto va videolarni taymersiz ko‘rish</string>
     <string name="VivogramAutoSaveExpiringMedia">Yo‘qoluvchi medialarni avtosaqlash</string>
     <string name="VivogramAutoSaveExpiringMediaDesc">Taymerli medialarni avtomatik galereyaga saqlash</string>
+    <string name="VivogramFastDownload">Tezlashtirilgan yuklab olish (8 oqim)</string>
+    <string name="VivogramFastDownloadDesc">Tezlik cheklovlarini olib tashlaydi, videoni yuklash kechikishini bartaraf qiladi va 8 parallel oqimdan foydalanadi.</string>
 
     <string name="VivogramAdsAndFilters">Reklama va filtrlar</string>
     <string name="VivogramBlockAds">Reklamani bloklash</string>

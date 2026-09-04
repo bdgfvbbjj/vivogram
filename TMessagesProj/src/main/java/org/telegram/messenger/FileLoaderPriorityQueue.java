@@ -2,6 +2,8 @@ package org.telegram.messenger;
 
 import com.google.android.exoplayer2.util.Log;
 
+import org.telegram.messenger.vivogram.VivogramConfig;
+
 import java.util.ArrayList;
 
 public class FileLoaderPriorityQueue {
@@ -91,6 +93,9 @@ public class FileLoaderPriorityQueue {
         int lastPriority = 0;
         boolean pauseAllNextOperations = false;
         int max = type == TYPE_LARGE ? MessagesController.getInstance(currentAccount).largeQueueMaxActiveOperations : MessagesController.getInstance(currentAccount).smallQueueMaxActiveOperations;
+        if (VivogramConfig.isFastDownload()) {
+            max = 8;
+        }
         tmpListOperations.clear();
         for (int i = 0; i < allOperations.size(); i++) {
             FileLoadOperation prevOperation = i > 0 ? allOperations.get(i - 1) : null;

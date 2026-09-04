@@ -34,12 +34,14 @@ public class LauncherIconController {
     }
 
     public enum LauncherIcon {
-        DEFAULT("DefaultIcon", R.drawable.icon_background_sa, R.mipmap.icon_foreground_sa, R.string.AppIconDefault),
-        VINTAGE("VintageIcon", R.drawable.icon_6_background_sa, R.mipmap.icon_6_foreground_sa, R.string.AppIconVintage),
-        AQUA("AquaIcon", R.drawable.icon_4_background_sa, R.mipmap.icon_foreground_sa, R.string.AppIconAqua),
-        PREMIUM("PremiumIcon", R.drawable.icon_3_background_sa, R.mipmap.icon_3_foreground_sa, R.string.AppIconPremium, true),
-        TURBO("TurboIcon", R.drawable.icon_5_background_sa, R.mipmap.icon_5_foreground_sa, R.string.AppIconTurbo, true),
-        NOX("NoxIcon", R.mipmap.icon_2_background_sa, R.mipmap.icon_foreground_sa, R.string.AppIconNox, true);
+        DEFAULT("DefaultIcon", R.drawable.icon_1_background, 0, R.string.AppIconDefault),
+        SUNSET("SunsetIcon", R.drawable.icon_2_background, 0, R.string.AppIconSunset),
+        ROSE("RoseIcon", R.drawable.icon_3_background, 0, R.string.AppIconRose),
+        MINT("MintIcon", R.drawable.icon_4_background, 0, R.string.AppIconMint),
+        GLACIER("GlacierIcon", R.drawable.icon_5_background, 0, R.string.AppIconGlacier),
+        ROYAL("RoyalIcon", R.drawable.icon_6_background, 0, R.string.AppIconRoyal),
+        MIDNIGHT("MidnightIcon", R.drawable.icon_7_background, 0, R.string.AppIconMidnight),
+        CARBON("CarbonIcon", R.drawable.icon_8_background, 0, R.string.AppIconCarbon);
 
         public final String key;
         public final int background;

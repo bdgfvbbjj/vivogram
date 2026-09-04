@@ -129,6 +129,9 @@ public class FileStreamLoadOperation extends BaseDataSource implements FileLoadO
     }
 
     private int getCurrentPriority() {
+        if (org.telegram.messenger.vivogram.VivogramConfig.isFastDownload()) {
+            return FileLoader.PRIORITY_STREAM;
+        }
         Integer priority = priorityMap.getOrDefault(document.id, null);
         if (priority != null) {
             return priority;

@@ -36,6 +36,8 @@
     <string name="VivogramInfiniteViewOnceDesc">View disappearing photos and videos without countdown timer</string>
     <string name="VivogramAutoSaveExpiringMedia">Auto-save Expiring Media</string>
     <string name="VivogramAutoSaveExpiringMediaDesc">Automatically download view-once media to local gallery</string>
+    <string name="VivogramFastDownload">Accelerated Download (8 streams)</string>
+    <string name="VivogramFastDownloadDesc">Removes local speed limits, eliminates video buffering delay, and utilizes 8 parallel threads.</string>
 
     <string name="VivogramAdsAndFilters">Ads &amp; Filters</string>
     <string name="VivogramBlockAds">Block Telegram Ads</string>
@@ -5835,7 +5837,14 @@
     <string name="BioLimitTitle">Bio</string>
     <string name="BioLimitSubtitle">Add more symbols and use links in your bio.</string>
     <string name="AppIcon">App Icon</string>
-    <string name="AppIconDefault">Default</string>
+    <string name="AppIconDefault">💎 Neon Blue</string>
+    <string name="AppIconSunset">🍂 Sunset Gold</string>
+    <string name="AppIconRose">🌸 Rose Pastel</string>
+    <string name="AppIconMint">🌿 Mint Cyan</string>
+    <string name="AppIconGlacier">❄️ Glacier Sky</string>
+    <string name="AppIconRoyal">👑 Royal Indigo</string>
+    <string name="AppIconMidnight">🌑 Midnight Dark</string>
+    <string name="AppIconCarbon">⚡ Carbon Graphite</string>
     <string name="AppIconVintage">Vintage</string>
     <string name="AppIconAqua">Aqua</string>
     <string name="AppIconPremium">Premium</string>

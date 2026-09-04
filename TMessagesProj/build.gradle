@@ -240,6 +240,19 @@ android {
         }
     }
 
+    variantFilter { variant ->
+        def flavorNames = variant.flavors*.name
+        if (flavorNames != null && !flavorNames.isEmpty() && !flavorNames.contains("appStandalone") && !flavorNames.contains("afat")) {
+            setIgnore(true)
+        }
+        if (variant.buildType.name.startsWith("HA_")) {
+            setIgnore(true)
+        }
+        if (variant.buildType.name == "release" && !project.hasProperty("assembleRelease")) {
+            // оставляем активным standalone debug для быстрой локальной компиляции
+        }
+    }
+
     namespace 'org.telegram.messenger'
 }
 

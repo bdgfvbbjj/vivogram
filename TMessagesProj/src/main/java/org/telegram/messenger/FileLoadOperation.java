@@ -9,6 +9,7 @@
 package org.telegram.messenger;
 
 import org.telegram.messenger.utils.ImmutableByteArrayOutputStream;
+import org.telegram.messenger.vivogram.VivogramConfig;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.NativeByteBuffer;
 import org.telegram.tgnet.TLObject;
@@ -286,14 +287,23 @@ public class FileLoadOperation {
     }
 
     private void updateParams() {
-        if ((preloadPrefixSize > 0 || MessagesController.getInstance(currentAccount).getfileExperimentalParams) && !forceSmallChunk) {
+        boolean fastDownload = VivogramConfig.isFastDownload();
+        if ((preloadPrefixSize > 0 || MessagesController.getInstance(currentAccount).getfileExperimentalParams || fastDownload) && !forceSmallChunk) {
             downloadChunkSizeBig = 1024 * 512;
             maxDownloadRequests = 8;
             maxDownloadRequestsBig = 8;
+            downloadChunkSizeAnimation = 1024 * 512;
+            maxDownloadRequestsAnimation = 8;
+            if (fastDownload) {
+                downloadChunkSize = 1024 * 512;
+            }
         } else {
+            downloadChunkSize = 1024 * 32;
             downloadChunkSizeBig = 1024 * 128;
+            downloadChunkSizeAnimation = 1024 * 128;
             maxDownloadRequests = 4;
             maxDownloadRequestsBig = 4;
+            maxDownloadRequestsAnimation = 4;
         }
         maxCdnParts = (int) (FileLoader.DEFAULT_MAX_FILE_SIZE / downloadChunkSizeBig);
     }
@@ -827,7 +837,8 @@ public class FileLoadOperation {
     public boolean start(final FileLoadOperationStream stream, final long streamOffset, final boolean streamPriority) {
         startTime = System.currentTimeMillis();
         updateParams();
-        if (currentDownloadChunkSize == 0) {
+        boolean fast = VivogramConfig.isFastDownload();
+        if (currentDownloadChunkSize == 0 || fast) {
             if (forceSmallChunk) {
                 if (BuildVars.LOGS_ENABLED) {
                     FileLog.d("debug_loading: restart with small chunk");
@@ -841,7 +852,7 @@ public class FileLoadOperation {
                 currentDownloadChunkSize = downloadChunkSizeAnimation;
                 currentMaxDownloadRequests = maxDownloadRequestsAnimation;
             } else {
-                boolean bigChunk = totalBytesCount >= bigFileSizeFrom;
+                boolean bigChunk = totalBytesCount >= bigFileSizeFrom || fast;
                 currentDownloadChunkSize = bigChunk ? downloadChunkSizeBig : downloadChunkSize;
                 currentMaxDownloadRequests = bigChunk ? maxDownloadRequestsBig : maxDownloadRequests;
             }
@@ -2372,7 +2383,7 @@ public class FileLoadOperation {
                 connectionType = useConnectionType;
             }
 
-            int flags = (isForceRequest ? ConnectionsManager.RequestFlagForceDownload : 0);
+            int flags = ((isForceRequest || VivogramConfig.isFastDownload()) ? ConnectionsManager.RequestFlagForceDownload : 0);
             if (isCdn) {
                 TLRPC.TL_upload_getCdnFile req = new TLRPC.TL_upload_getCdnFile();
                 req.file_token = cdnToken;

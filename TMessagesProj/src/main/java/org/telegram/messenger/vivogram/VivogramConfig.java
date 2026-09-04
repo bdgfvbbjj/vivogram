@@ -30,6 +30,7 @@ public class VivogramConfig {
     private static final String KEY_SAVE_RESTRICTED_MEDIA = "save_restricted_media";
     private static final String KEY_INFINITE_VIEW_ONCE = "infinite_view_once";
     private static final String KEY_AUTO_SAVE_EXPIRING_MEDIA = "auto_save_expiring_media";
+    private static final String KEY_FAST_DOWNLOAD = "pref_fast_download";
 
     // Keys - Ads & Filters
     private static final String KEY_BLOCK_ADS = "block_ads";
@@ -173,6 +174,16 @@ public class VivogramConfig {
     public static void setAutoSaveExpiringMedia(boolean value) {
         SharedPreferences p = getPreferences();
         if (p != null) p.edit().putBoolean(KEY_AUTO_SAVE_EXPIRING_MEDIA, value).apply();
+    }
+
+    public static boolean isFastDownload() {
+        SharedPreferences p = getPreferences();
+        return p != null && p.getBoolean(KEY_FAST_DOWNLOAD, true);
+    }
+
+    public static void setFastDownload(boolean value) {
+        SharedPreferences p = getPreferences();
+        if (p != null) p.edit().putBoolean(KEY_FAST_DOWNLOAD, value).apply();
     }
 
     // Ads & Filters

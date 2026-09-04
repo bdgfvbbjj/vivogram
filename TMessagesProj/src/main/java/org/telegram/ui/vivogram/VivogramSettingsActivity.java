@@ -57,6 +57,7 @@ public class VivogramSettingsActivity extends BaseFragment {
     private int saveRestrictedMediaRow;
     private int infiniteViewOnceRow;
     private int autoSaveExpiringMediaRow;
+    private int fastDownloadRow;
     private int antiShadowRow;
 
     // Ads & Filters section
@@ -106,12 +107,13 @@ public class VivogramSettingsActivity extends BaseFragment {
         saveEditsRow = rowCount++;
         messagesShadowRow = rowCount++;
 
-        // Anti-Restrictions Section (4 items)
+        // Anti-Restrictions Section (5 items)
         antiHeaderRow = rowCount++;
         allowScreenshotsRow = rowCount++;
         saveRestrictedMediaRow = rowCount++;
         infiniteViewOnceRow = rowCount++;
         autoSaveExpiringMediaRow = rowCount++;
+        fastDownloadRow = rowCount++;
         antiShadowRow = rowCount++;
 
         // Ads & Filters Section (4 items)
@@ -213,6 +215,10 @@ public class VivogramSettingsActivity extends BaseFragment {
             } else if (position == autoSaveExpiringMediaRow) {
                 boolean next = !VivogramConfig.isAutoSaveExpiringMedia();
                 VivogramConfig.setAutoSaveExpiringMedia(next);
+                rowCell.setChecked(next);
+            } else if (position == fastDownloadRow) {
+                boolean next = !VivogramConfig.isFastDownload();
+                VivogramConfig.setFastDownload(next);
                 rowCell.setChecked(next);
             } else if (position == blockAdsRow) {
                 boolean next = !VivogramConfig.isBlockTelegramAds();
@@ -456,11 +462,17 @@ public class VivogramSettingsActivity extends BaseFragment {
                             LocaleController.getString(R.string.VivogramInfiniteViewOnceDesc),
                             true, VivogramConfig.isInfiniteViewOnce(), null);
                 } else if (position == autoSaveExpiringMediaRow) {
-                    cell.setPositionInGroup(IOSSettingRowCell.POSITION_BOTTOM);
+                    cell.setPositionInGroup(IOSSettingRowCell.POSITION_MIDDLE);
                     cell.set(0xFF34C759, 0xFF248A3D, R.drawable.msg_photos,
                             LocaleController.getString(R.string.VivogramAutoSaveExpiringMedia),
                             LocaleController.getString(R.string.VivogramAutoSaveExpiringMediaDesc),
                             true, VivogramConfig.isAutoSaveExpiringMedia(), null);
+                } else if (position == fastDownloadRow) {
+                    cell.setPositionInGroup(IOSSettingRowCell.POSITION_BOTTOM);
+                    cell.set(0xFF007AFF, 0xFF0051A8, R.drawable.msg_download,
+                            LocaleController.getString(R.string.VivogramFastDownload),
+                            LocaleController.getString(R.string.VivogramFastDownloadDesc),
+                            true, VivogramConfig.isFastDownload(), null);
                 } else if (position == blockAdsRow) {
                     cell.setPositionInGroup(IOSSettingRowCell.POSITION_TOP);
                     cell.set(0xFFFF9500, 0xFFC97600, R.drawable.msg_block2,
