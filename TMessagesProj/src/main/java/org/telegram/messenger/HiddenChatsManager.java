@@ -115,17 +115,25 @@ public class HiddenChatsManager {
 
         // Если в приложении включен код-пароль, запрашиваем его
         if (SharedConfig.passcodeHash.length() > 0) {
-            PasscodeActivity passcodeActivity = new PasscodeActivity(PasscodeActivity.TYPE_PASSCODE_CHECK);
-            passcodeActivity.setDelegate(new PasscodeActivity.PasscodeActivityDelegate() {
-                @Override
-                public void didAcceptedPassword(PasscodeActivity activity) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+            builder.setTitle(LocaleController.getString(R.string.Passcode));
+
+            final android.widget.EditText input = new android.widget.EditText(activity);
+            input.setInputType(SharedConfig.passcodeType == 0 ? (android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD) : (android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD));
+            input.setTransformationMethod(android.text.method.PasswordTransformationMethod.getInstance());
+            builder.setView(input);
+
+            builder.setPositiveButton(LocaleController.getString(R.string.OK), (dialog, which) -> {
+                String pass = input.getText().toString();
+                if (SharedConfig.checkPasscode(pass)) {
                     isUnlocked = true;
                     if (onSuccess != null) {
                         onSuccess.run();
                     }
                 }
             });
-            fragment.presentFragment(passcodeActivity);
+            builder.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
+            builder.show();
         } else {
             // Если код-пароль не установлен, разблокируем напрямую
             isUnlocked = true;

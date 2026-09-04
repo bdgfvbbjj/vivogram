@@ -65,6 +65,10 @@ public class VivogramHistoryStorage {
         }
     }
 
+    public void markMessageDeleted(long dialogId, int messageId, int deleteDate) {
+        saveDeletedMessage(dialogId, messageId, deleteDate);
+    }
+
     public boolean isMessageDeleted(long dialogId, int messageId) {
         try {
             SQLiteDatabase db = databaseHelper.getReadableDatabase();

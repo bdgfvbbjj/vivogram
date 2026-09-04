@@ -68,10 +68,12 @@ public class MessagePrivateSeenView extends FrameLayout {
     private final Runnable dismiss;
 
     private final int messageDiff;
+    private final MessageObject messageObject;
 
     public MessagePrivateSeenView(Context context, int type, @NonNull MessageObject messageObject, Runnable dismiss, Theme.ResourcesProvider resourcesProvider) {
         super(context);
         this.type = type;
+        this.messageObject = messageObject;
 
         currentAccount = messageObject.currentAccount;
         this.resourcesProvider = resourcesProvider;

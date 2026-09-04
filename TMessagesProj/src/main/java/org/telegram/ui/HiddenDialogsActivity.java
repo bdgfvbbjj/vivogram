@@ -29,13 +29,13 @@ public class HiddenDialogsActivity extends DialogsActivity {
     }
 
     @Override
-    protected void createActionBar() {
-        super.createActionBar();
+    public ActionBar createActionBar(android.content.Context context) {
+        ActionBar bar = super.createActionBar(context);
 
-        if (actionBar != null) {
-            actionBar.setTitle(LocaleController.getString("HiddenChatsTitle", R.string.HiddenChatsTitle));
-            actionBar.setBackButtonImage(R.drawable.ic_ab_back);
-            actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
+        if (bar != null) {
+            bar.setTitle(LocaleController.getString("HiddenChatsTitle", R.string.HiddenChatsTitle));
+            bar.setBackButtonImage(R.drawable.ic_ab_back);
+            bar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
                 @Override
                 public void onItemClick(int id) {
                     if (id == -1) {
@@ -44,6 +44,7 @@ public class HiddenDialogsActivity extends DialogsActivity {
                 }
             });
         }
+        return bar;
     }
 
     public void exitHiddenMode() {

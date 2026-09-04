@@ -7321,7 +7321,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
             }
             if (dc == 0) {
-                dc = getUserConfig().getCurrentDatacenterId();
+                dc = getConnectionsManager().getCurrentDatacenterId();
             }
             String dcStr = "DC " + dc;
             AndroidUtilities.addToClipboard(dcStr);
@@ -13667,7 +13667,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                             }
                         }
                         if (dc == 0) {
-                            dc = getUserConfig().getCurrentDatacenterId();
+                            dc = getConnectionsManager().getCurrentDatacenterId();
                         }
                         detailCell.setTextAndValue("DC " + dc, "Data Center", false);
                     } else if (position == regDateRow) {

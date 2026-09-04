@@ -311,7 +311,7 @@ public class VivogramSettingsActivity extends BaseFragment {
             String code = input.getText().toString().trim();
             if (!code.isEmpty()) {
                 VivogramConfig.setHiddenPasscode(code);
-                BulletinFactory.of(this).createSimpleBulletin(R.drawable.msg_shield, LocaleController.getString(R.string.VivogramPasscodeSaved)).show();
+                BulletinFactory.of(this).createSimpleBulletin(R.drawable.msg_secret, LocaleController.getString(R.string.VivogramPasscodeSaved)).show();
                 if (listAdapter != null) listAdapter.notifyItemChanged(hiddenPasscodeRow);
             }
         });
@@ -415,13 +415,13 @@ public class VivogramSettingsActivity extends BaseFragment {
                             true, VivogramConfig.isGhostTyping(), null);
                 } else if (position == ghostOnlineRow) {
                     cell.setPositionInGroup(IOSSettingRowCell.POSITION_MIDDLE);
-                    cell.set(0xFF34C759, 0xFF248A3D, R.drawable.msg_status_edit,
+                    cell.set(0xFF34C759, 0xFF248A3D, R.drawable.msg_edit,
                             LocaleController.getString(R.string.VivogramGhostOnline),
                             LocaleController.getString(R.string.VivogramGhostOnlineDesc),
                             true, VivogramConfig.isGhostOnline(), null);
                 } else if (position == ghostReadVoiceRow) {
                     cell.setPositionInGroup(IOSSettingRowCell.POSITION_BOTTOM);
-                    cell.set(0xFF30B0C7, 0xFF1D7887, R.drawable.msg_voice,
+                    cell.set(0xFF30B0C7, 0xFF1D7887, R.drawable.msg_played,
                             LocaleController.getString(R.string.VivogramGhostReadVoice),
                             LocaleController.getString(R.string.VivogramGhostReadVoiceDesc),
                             true, VivogramConfig.isGhostReadVoice(), null);
@@ -475,7 +475,7 @@ public class VivogramSettingsActivity extends BaseFragment {
                             true, VivogramConfig.isHideReactions(), null);
                 } else if (position == spamFilterRow) {
                     cell.setPositionInGroup(IOSSettingRowCell.POSITION_MIDDLE);
-                    cell.set(0xFFFF3B30, 0xFFB82820, R.drawable.msg_shield,
+                    cell.set(0xFFFF3B30, 0xFFB82820, R.drawable.msg_secret,
                             LocaleController.getString(R.string.VivogramSpamFilter),
                             LocaleController.getString(R.string.VivogramSpamFilterDesc),
                             true, VivogramConfig.isSpamFilterEnabled(), null);
@@ -493,19 +493,19 @@ public class VivogramSettingsActivity extends BaseFragment {
                             true, VivogramConfig.isForwardNoAuthor(), null);
                 } else if (position == showSecondsRow) {
                     cell.setPositionInGroup(IOSSettingRowCell.POSITION_MIDDLE);
-                    cell.set(0xFF5856D6, 0xFF3634A3, R.drawable.msg_history,
+                    cell.set(0xFF5856D6, 0xFF3634A3, R.drawable.msg_calendar,
                             LocaleController.getString(R.string.VivogramShowSeconds),
                             LocaleController.getString(R.string.VivogramShowSecondsDesc),
                             true, VivogramConfig.isShowSeconds(), null);
                 } else if (position == confirmSendMediaRow) {
                     cell.setPositionInGroup(IOSSettingRowCell.POSITION_MIDDLE);
-                    cell.set(0xFFFF9500, 0xFFC97600, R.drawable.msg_stickers,
+                    cell.set(0xFFFF9500, 0xFFC97600, R.drawable.msg_sendfile,
                             LocaleController.getString(R.string.VivogramConfirmSendMedia),
                             LocaleController.getString(R.string.VivogramConfirmSendMediaDesc),
                             true, VivogramConfig.isConfirmSendMedia(), null);
                 } else if (position == disableStoriesRow) {
                     cell.setPositionInGroup(IOSSettingRowCell.POSITION_MIDDLE);
-                    cell.set(0xFFFF2D55, 0xFFB31835, R.drawable.msg_story_switch,
+                    cell.set(0xFFFF2D55, 0xFFB31835, R.drawable.msg_stories_archive,
                             LocaleController.getString(R.string.VivogramDisableStories),
                             LocaleController.getString(R.string.VivogramDisableStoriesDesc),
                             true, VivogramConfig.isDisableStories(), null);
@@ -517,7 +517,7 @@ public class VivogramSettingsActivity extends BaseFragment {
                             true, VivogramConfig.isShowIdDcProfile(), null);
                 } else if (position == hiddenPasscodeRow) {
                     cell.setPositionInGroup(IOSSettingRowCell.POSITION_SINGLE);
-                    cell.set(0xFF5856D6, 0xFF3634A3, R.drawable.msg_shield,
+                    cell.set(0xFF5856D6, 0xFF3634A3, R.drawable.msg_secret,
                             LocaleController.getString(R.string.VivogramHiddenPasscode),
                             LocaleController.getString(R.string.VivogramHiddenPasscodeDesc),
                             false, false, VivogramConfig.hasHiddenPasscode() ? LocaleController.getString(R.string.VivogramPasscodeEnabled) : LocaleController.getString(R.string.VivogramPasscodeNotSet));

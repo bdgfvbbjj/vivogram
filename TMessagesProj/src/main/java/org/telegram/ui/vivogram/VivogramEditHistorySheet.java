@@ -135,7 +135,7 @@ public class VivogramEditHistorySheet extends BottomSheet {
             } else {
                 versionView.setText("Версия " + version);
             }
-            dateView.setText(LocaleController.formatDateTime(date));
+            dateView.setText(LocaleController.getInstance().getFormatterStats().format(date * 1000L));
             messageView.setText(text);
         }
     }

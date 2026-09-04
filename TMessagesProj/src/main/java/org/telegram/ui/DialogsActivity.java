@@ -14501,7 +14501,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             org.telegram.messenger.vivogram.VivogramConfig.setShowingHiddenChats(newState);
             updateHiddenChatsState();
             BulletinFactory.of(this).createSimpleBulletin(
-                    R.drawable.msg_shield,
+                    R.drawable.msg_secret,
                     newState ? "Скрытые чаты: режим включен" : "Скрытые чаты: режим выключен"
             ).show();
             return;
@@ -14530,7 +14530,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 org.telegram.messenger.vivogram.VivogramConfig.setShowingHiddenChats(newState);
                 updateHiddenChatsState();
                 BulletinFactory.of(this).createSimpleBulletin(
-                        R.drawable.msg_shield,
+                        R.drawable.msg_secret,
                         newState ? "Скрытые чаты: режим включен" : "Скрытые чаты: режим выключен"
                 ).show();
             } else {
@@ -14563,9 +14563,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void updateDialogsList() {
-        if (dialogsAdapter != null) {
-            dialogsAdapter.notifyDataSetChanged();
-        }
         if (viewPages != null) {
             for (ViewPage page : viewPages) {
                 if (page != null && page.listView != null && page.listView.getAdapter() != null) {
