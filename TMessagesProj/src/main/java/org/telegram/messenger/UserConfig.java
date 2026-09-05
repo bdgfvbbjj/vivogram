@@ -101,7 +101,8 @@ public class UserConfig extends BaseController {
     public static int getActivatedAccountsCount() {
         int count = 0;
         for (int a = 0; a < MAX_ACCOUNT_COUNT; a++) {
-            if (AccountInstance.getInstance(a).getUserConfig().isClientActivated()) {
+            UserConfig userConfig = UserConfig.getInstance(a);
+            if (userConfig != null && userConfig.isClientActivated()) {
                 count++;
             }
         }
@@ -114,7 +115,8 @@ public class UserConfig extends BaseController {
 
     public static boolean hasPremiumOnAccounts() {
         for (int a = 0; a < MAX_ACCOUNT_COUNT; a++) {
-            if (AccountInstance.getInstance(a).getUserConfig().isClientActivated() && AccountInstance.getInstance(a).getUserConfig().getUserConfig().isPremium()) {
+            UserConfig userConfig = UserConfig.getInstance(a);
+            if (userConfig != null && userConfig.isClientActivated() && userConfig.isPremium()) {
                 return true;
             }
         }

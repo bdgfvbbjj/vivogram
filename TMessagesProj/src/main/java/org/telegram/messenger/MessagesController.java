@@ -10524,12 +10524,17 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public void updateTimerProc() {
+        UserConfig userConfig = getUserConfig();
+        if (userConfig == null || !userConfig.isClientActivated()) {
+            return;
+        }
+
         long currentTime = System.currentTimeMillis();
 
         checkDeletingTask(false);
         checkReadTasks();
 
-        if (getUserConfig().isClientActivated()) {
+        if (userConfig.isClientActivated()) {
             if (!org.telegram.messenger.vivogram.VivogramConfig.isGhostOnline() && !ignoreSetOnline && getConnectionsManager().getPauseTime() == 0 && ApplicationLoader.isScreenOn && !ApplicationLoader.mainInterfacePausedStageQueue) {
                 if (ApplicationLoader.mainInterfacePausedStageQueueTime != 0 && Math.abs(ApplicationLoader.mainInterfacePausedStageQueueTime - System.currentTimeMillis()) > 1000) {
                     if (statusSettingState != 1 && (lastStatusUpdateTime == 0 || Math.abs(System.currentTimeMillis() - lastStatusUpdateTime) >= 55000 || offlineSent)) {

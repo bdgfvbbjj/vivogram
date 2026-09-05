@@ -798,7 +798,19 @@ public class ConnectionsManager extends BaseController {
                     FileLog.d("java received " + message);
                 }
                 KeepAliveJob.finishJob();
-                Utilities.stageQueue.postRunnable(() -> AccountInstance.getInstance(currentAccount).getMessagesController().processUpdates((TLRPC.Updates) message, false));
+                Utilities.stageQueue.postRunnable(() -> {
+                    if (currentAccount < 0 || currentAccount >= UserConfig.MAX_ACCOUNT_COUNT) {
+                        return;
+                    }
+                    AccountInstance accountInstance = AccountInstance.getInstance(currentAccount);
+                    if (accountInstance == null || accountInstance.getUserConfig() == null || !accountInstance.getUserConfig().isClientActivated()) {
+                        return;
+                    }
+                    MessagesController messagesController = accountInstance.getMessagesController();
+                    if (messagesController != null) {
+                        messagesController.processUpdates((TLRPC.Updates) message, false);
+                    }
+                });
             } else {
                 if (BuildVars.LOGS_ENABLED) {
                     FileLog.d(String.format("java received unknown constructor 0x%x", constructor));
@@ -810,24 +822,57 @@ public class ConnectionsManager extends BaseController {
     }
 
     public static void onUpdate(final int currentAccount) {
-        Utilities.stageQueue.postRunnable(() -> AccountInstance.getInstance(currentAccount).getMessagesController().updateTimerProc());
+        Utilities.stageQueue.postRunnable(() -> {
+            if (currentAccount < 0 || currentAccount >= UserConfig.MAX_ACCOUNT_COUNT) {
+                return;
+            }
+            AccountInstance accountInstance = AccountInstance.getInstance(currentAccount);
+            if (accountInstance == null || accountInstance.getUserConfig() == null || !accountInstance.getUserConfig().isClientActivated()) {
+                return;
+            }
+            MessagesController messagesController = accountInstance.getMessagesController();
+            if (messagesController != null) {
+                messagesController.updateTimerProc();
+            }
+        });
     }
 
     public static void onSessionCreated(final int currentAccount) {
-        Utilities.stageQueue.postRunnable(() -> AccountInstance.getInstance(currentAccount).getMessagesController().getDifference());
+        Utilities.stageQueue.postRunnable(() -> {
+            if (currentAccount < 0 || currentAccount >= UserConfig.MAX_ACCOUNT_COUNT) {
+                return;
+            }
+            AccountInstance accountInstance = AccountInstance.getInstance(currentAccount);
+            if (accountInstance == null || accountInstance.getUserConfig() == null || !accountInstance.getUserConfig().isClientActivated()) {
+                return;
+            }
+            MessagesController messagesController = accountInstance.getMessagesController();
+            if (messagesController != null) {
+                messagesController.getDifference();
+            }
+        });
     }
 
     public static void onConnectionStateChanged(final int state, final int currentAccount) {
         AndroidUtilities.runOnUIThread(() -> {
+            if (currentAccount < 0 || currentAccount >= UserConfig.MAX_ACCOUNT_COUNT) {
+                return;
+            }
             getInstance(currentAccount).connectionState = state;
-            AccountInstance.getInstance(currentAccount).getNotificationCenter().postNotificationName(NotificationCenter.didUpdateConnectionState);
+            AccountInstance accountInstance = AccountInstance.getInstance(currentAccount);
+            if (accountInstance != null && accountInstance.getNotificationCenter() != null) {
+                accountInstance.getNotificationCenter().postNotificationName(NotificationCenter.didUpdateConnectionState);
+            }
         });
     }
 
     public static void onLogout(final int currentAccount) {
         AndroidUtilities.runOnUIThread(() -> {
+            if (currentAccount < 0 || currentAccount >= UserConfig.MAX_ACCOUNT_COUNT) {
+                return;
+            }
             AccountInstance accountInstance = AccountInstance.getInstance(currentAccount);
-            if (accountInstance.getUserConfig().getClientUserId() != 0) {
+            if (accountInstance != null && accountInstance.getUserConfig() != null && accountInstance.getUserConfig().getClientUserId() != 0) {
                 accountInstance.getUserConfig().clearConfig();
                 accountInstance.getMessagesController().performLogout(0);
             }
@@ -928,7 +973,19 @@ public class ConnectionsManager extends BaseController {
             buff.reused = true;
             final TLRPC.TL_config message = TLRPC.TL_config.TLdeserialize(buff, buff.readInt32(true), true);
             if (message != null) {
-                Utilities.stageQueue.postRunnable(() -> AccountInstance.getInstance(currentAccount).getMessagesController().updateConfig(message));
+                Utilities.stageQueue.postRunnable(() -> {
+                    if (currentAccount < 0 || currentAccount >= UserConfig.MAX_ACCOUNT_COUNT) {
+                        return;
+                    }
+                    AccountInstance accountInstance = AccountInstance.getInstance(currentAccount);
+                    if (accountInstance == null || accountInstance.getUserConfig() == null || !accountInstance.getUserConfig().isClientActivated()) {
+                        return;
+                    }
+                    MessagesController messagesController = accountInstance.getMessagesController();
+                    if (messagesController != null) {
+                        messagesController.updateConfig(message);
+                    }
+                });
             }
         } catch (Exception e) {
             FileLog.e(e);
