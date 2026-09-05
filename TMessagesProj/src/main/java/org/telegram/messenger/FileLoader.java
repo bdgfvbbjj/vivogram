@@ -296,7 +296,9 @@ public class FileLoader extends BaseController {
         String key = getAttachFileName(document);
         String dKey = key + (player ? "p" : "");
         loadingVideos.put(dKey, true);
-        getNotificationCenter().postNotificationName(NotificationCenter.videoLoadingStateChanged, key);
+        AndroidUtilities.runOnUIThread(() -> {
+            getNotificationCenter().postNotificationName(NotificationCenter.videoLoadingStateChanged, key);
+        });
     }
 
     public void setLoadingVideo(TLRPC.Document document, boolean player, boolean schedule) {
@@ -317,7 +319,9 @@ public class FileLoader extends BaseController {
         String key = getAttachFileName(document);
         if (loadingVideos.containsKey(key + (player ? "" : "p"))) {
             loadingVideos.put(key + (player ? "p" : ""), true);
-            getNotificationCenter().postNotificationName(NotificationCenter.videoLoadingStateChanged, key);
+            AndroidUtilities.runOnUIThread(() -> {
+                getNotificationCenter().postNotificationName(NotificationCenter.videoLoadingStateChanged, key);
+            });
         }
     }
 
@@ -325,7 +329,9 @@ public class FileLoader extends BaseController {
         String key = getAttachFileName(document);
         String dKey = key + (player ? "p" : "");
         if (loadingVideos.remove(dKey) != null) {
-            getNotificationCenter().postNotificationName(NotificationCenter.videoLoadingStateChanged, key);
+            AndroidUtilities.runOnUIThread(() -> {
+                getNotificationCenter().postNotificationName(NotificationCenter.videoLoadingStateChanged, key);
+            });
         }
     }
 
@@ -428,7 +434,8 @@ public class FileLoader extends BaseController {
             }
             FileUploadOperation operation = new FileUploadOperation(currentAccount, location, encrypted, esimated, type);
             if (delegate != null && estimatedSize != 0) {
-                delegate.fileUploadProgressChanged(operation, location, 0, estimatedSize, encrypted);
+                final FileLoaderDelegate d = delegate;
+                AndroidUtilities.runOnUIThread(() -> d.fileUploadProgressChanged(operation, location, 0, estimatedSize, encrypted));
             }
             if (encrypted) {
                 uploadOperationPathsEnc.put(location, operation);
@@ -466,8 +473,9 @@ public class FileLoader extends BaseController {
                                 }
                             }
                         }
-                        if (delegate != null) {
-                            delegate.fileDidUploaded(location, inputFile, inputEncryptedFile, key, iv, operation.getTotalFileSize());
+                        final FileLoaderDelegate d = delegate;
+                        if (d != null) {
+                            AndroidUtilities.runOnUIThread(() -> d.fileDidUploaded(location, inputFile, inputEncryptedFile, key, iv, operation.getTotalFileSize()));
                         }
                     });
                 }
@@ -480,8 +488,9 @@ public class FileLoader extends BaseController {
                         } else {
                             uploadOperationPaths.remove(location);
                         }
-                        if (delegate != null) {
-                            delegate.fileDidFailedUpload(location, encrypted);
+                        final FileLoaderDelegate d = delegate;
+                        if (d != null) {
+                            AndroidUtilities.runOnUIThread(() -> d.fileDidFailedUpload(location, encrypted));
                         }
                         if (small) {
                             currentUploadSmallOperationsCount--;
@@ -507,8 +516,9 @@ public class FileLoader extends BaseController {
 
                 @Override
                 public void didChangedUploadProgress(FileUploadOperation operation, long uploadedSize, long totalSize) {
-                    if (delegate != null) {
-                        delegate.fileUploadProgressChanged(operation, location, uploadedSize, totalSize, encrypted);
+                    final FileLoaderDelegate d = delegate;
+                    if (d != null) {
+                        AndroidUtilities.runOnUIThread(() -> d.fileUploadProgressChanged(operation, location, uploadedSize, totalSize, encrypted));
                     }
                 }
             });
@@ -1023,8 +1033,9 @@ public class FileLoader extends BaseController {
 
                 if (!operation.isPreloadVideoOperation()) {
                     loadOperationPathsUI.remove(fileName);
-                    if (delegate != null) {
-                        delegate.fileDidLoaded(fileName, finalFile, parentObject, finalType);
+                    final FileLoaderDelegate d = delegate;
+                    if (d != null) {
+                        AndroidUtilities.runOnUIThread(() -> d.fileDidLoaded(fileName, finalFile, parentObject, finalType));
                     }
                 }
 
@@ -1035,21 +1046,23 @@ public class FileLoader extends BaseController {
             public void didFailedLoadingFile(FileLoadOperation operation, int reason) {
                 loadOperationPathsUI.remove(fileName);
                 checkDownloadQueue(operation, operation.getQueue());
-                if (delegate != null) {
-                    delegate.fileDidFailedLoad(fileName, reason);
+                final FileLoaderDelegate d = delegate;
+                if (d != null) {
+                    AndroidUtilities.runOnUIThread(() -> d.fileDidFailedLoad(fileName, reason));
                 }
 
                 if (document != null && parentObject instanceof MessageObject && reason == 0) {
-                    getDownloadController().onDownloadFail((MessageObject) parentObject, reason);
+                    AndroidUtilities.runOnUIThread(() -> getDownloadController().onDownloadFail((MessageObject) parentObject, reason));
                 } else if (reason == -1) {
-                    LaunchActivity.checkFreeDiscSpaceStatic(2);
+                    AndroidUtilities.runOnUIThread(() -> LaunchActivity.checkFreeDiscSpaceStatic(2));
                 }
             }
 
             @Override
             public void didChangedLoadProgress(FileLoadOperation operation, long uploadedSize, long totalSize) {
-                if (delegate != null) {
-                    delegate.fileLoadProgressChanged(operation, fileName, uploadedSize, totalSize);
+                final FileLoaderDelegate d = delegate;
+                if (d != null) {
+                    AndroidUtilities.runOnUIThread(() -> d.fileLoadProgressChanged(operation, fileName, uploadedSize, totalSize));
                 }
             }
 

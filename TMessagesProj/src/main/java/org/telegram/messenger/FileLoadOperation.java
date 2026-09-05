@@ -2471,168 +2471,172 @@ public class FileLoadOperation {
             flags |= ConnectionsManager.RequestFlagListenAfterCancel;
             int datacenterId = isCdn ? cdnDatacenterId : this.datacenterId;
             final int requestToken = requestInfo.requestToken = ConnectionsManager.getInstance(currentAccount).sendRequestSync(request, (response, error) -> {
-                if (requestInfo.cancelled) {
-                    FileLog.e("received chunk but definitely cancelled offset=" + requestInfo.offset + " size=" + requestInfo.chunkSize + " token=" + requestInfo.requestToken);
-                    return;
-                }
-                if (requestInfo.cancelling) {
-                    FileLog.e("received cancelled chunk after cancelRequests! offset=" + requestInfo.offset + " size=" + requestInfo.chunkSize + " token=" + requestInfo.requestToken);
-                }
-                if (!requestInfos.contains(requestInfo)) {
-                    if (!cancelledRequestInfos.contains(requestInfo)) {
+                Utilities.stageQueue.postRunnable(() -> {
+                    if (requestInfo.cancelled) {
+                        FileLog.e("received chunk but definitely cancelled offset=" + requestInfo.offset + " size=" + requestInfo.chunkSize + " token=" + requestInfo.requestToken);
                         return;
                     }
+                    if (requestInfo.cancelling) {
+                        FileLog.e("received cancelled chunk after cancelRequests! offset=" + requestInfo.offset + " size=" + requestInfo.chunkSize + " token=" + requestInfo.requestToken);
+                    }
+                    if (!requestInfos.contains(requestInfo)) {
+                        if (!cancelledRequestInfos.contains(requestInfo)) {
+                            return;
+                        }
 
-                    boolean replaced = false;
-                    for (int i = 0; i < requestInfos.size(); ++i) {
-                        RequestInfo r = requestInfos.get(i);
-                        if (r != null && r != requestInfo && r.offset == requestInfo.offset && r.chunkSize == requestInfo.chunkSize) {
-                            FileLog.e("received cancelled chunk faster than new one! received=" + requestInfo.requestToken + " new=" + r.requestToken);
-                            if (!replaced) {
-                                requestInfos.set(i, requestInfo);
-                                replaced = true;
-                            } else {
-                                requestInfos.remove(i);
-                                i--;
+                        boolean replaced = false;
+                        for (int i = 0; i < requestInfos.size(); ++i) {
+                            RequestInfo r = requestInfos.get(i);
+                            if (r != null && r != requestInfo && r.offset == requestInfo.offset && r.chunkSize == requestInfo.chunkSize) {
+                                FileLog.e("received cancelled chunk faster than new one! received=" + requestInfo.requestToken + " new=" + r.requestToken);
+                                if (!replaced) {
+                                    requestInfos.set(i, requestInfo);
+                                    replaced = true;
+                                } else {
+                                    requestInfos.remove(i);
+                                    i--;
+                                }
                             }
                         }
                     }
-                }
-                for (int i = 0; i < cancelledRequestInfos.size(); ++i) {
-                    RequestInfo r = cancelledRequestInfos.get(i);
-                    if (r != null && r != requestInfo && r.offset == requestInfo.offset && r.chunkSize == requestInfo.chunkSize) {
-                        FileLog.e("received new chunk faster than cancelled one! received=" + requestInfo.requestToken + " cancelled=" + r.requestToken);
-                        cancelledRequestInfos.remove(i);
-                        i--;
+                    for (int i = 0; i < cancelledRequestInfos.size(); ++i) {
+                        RequestInfo r = cancelledRequestInfos.get(i);
+                        if (r != null && r != requestInfo && r.offset == requestInfo.offset && r.chunkSize == requestInfo.chunkSize) {
+                            FileLog.e("received new chunk faster than cancelled one! received=" + requestInfo.requestToken + " cancelled=" + r.requestToken);
+                            cancelledRequestInfos.remove(i);
+                            i--;
+                        }
                     }
-                }
 
-                if (BuildVars.LOGS_ENABLED) {
-                    FileLog.d("debug_loading: " + cacheFileFinal.getName() + " time=" + (System.currentTimeMillis() - requestInfo.requestStartTime) + " dcId=" + datacenterId + " cdn=" + isCdn + " conType=" + connectionType + " reqId" + requestInfo.requestToken);
-                }
-                if (requestInfo == priorityRequestInfo) {
-                    if (BuildVars.DEBUG_VERSION) {
-                        FileLog.d("frame get request completed " + priorityRequestInfo.offset);
+                    if (BuildVars.LOGS_ENABLED) {
+                        FileLog.d("debug_loading: " + cacheFileFinal.getName() + " time=" + (System.currentTimeMillis() - requestInfo.requestStartTime) + " dcId=" + datacenterId + " cdn=" + isCdn + " conType=" + connectionType + " reqId" + requestInfo.requestToken);
                     }
-                    priorityRequestInfo = null;
-                }
-                if (error != null) {
-                    if (requestInfo.whenCancelled != null) {
-                        requestInfo.whenCancelled.run();
-                    }
-                    if (error.code == -2000) {
-                        requestInfos.remove(requestInfo);
-                        requestedBytesCount -= requestInfo.chunkSize;
-                        removePart(notRequestedBytesRanges, requestInfo.offset, requestInfo.offset + requestInfo.chunkSize);
-                        return;
-                    } else if (FileRefController.isFileRefError(error.text)) {
-                        requestReference(requestInfo);
-                        return;
-                    } else if (request instanceof TLRPC.TL_upload_getCdnFile) {
-                        if (error.text.equals("FILE_TOKEN_INVALID")) {
-                            isCdn = false;
-                            clearOperation(requestInfo, false, false);
-                            startDownloadRequest(connectionType);
-                            return;
+                    if (requestInfo == priorityRequestInfo) {
+                        if (BuildVars.DEBUG_VERSION) {
+                            FileLog.d("frame get request completed " + priorityRequestInfo.offset);
                         }
+                        priorityRequestInfo = null;
                     }
-                }
-                if (response instanceof TLRPC.TL_upload_fileCdnRedirect) {
-                    TLRPC.TL_upload_fileCdnRedirect res = (TLRPC.TL_upload_fileCdnRedirect) response;
-                    if (!res.file_hashes.isEmpty()) {
-                        if (cdnHashes == null) {
-                            cdnHashes = new HashMap<>();
-                        }
-                        for (int a1 = 0; a1 < res.file_hashes.size(); a1++) {
-                            TLRPC.TL_fileHash hash = res.file_hashes.get(a1);
-                            cdnHashes.put(hash.offset, hash);
-                        }
-                    }
-                    if (res.encryption_iv == null || res.encryption_key == null || res.encryption_iv.length != 16 || res.encryption_key.length != 32) {
+                    if (error != null) {
                         if (requestInfo.whenCancelled != null) {
                             requestInfo.whenCancelled.run();
                         }
-                        error = new TLRPC.TL_error();
-                        error.text = "bad redirect response";
-                        error.code = 400;
-                        processRequestResult(requestInfo, error);
-                    } else {
-                        isCdn = true;
-                        if (notCheckedCdnRanges == null) {
-                            notCheckedCdnRanges = new ArrayList<>();
-                            notCheckedCdnRanges.add(new Range(0, maxCdnParts));
-                        }
-                        cdnDatacenterId = res.dc_id;
-                        cdnIv = res.encryption_iv;
-                        cdnKey = res.encryption_key;
-                        cdnToken = res.file_token;
-                        clearOperation(requestInfo, false, false);
-                        startDownloadRequest(connectionType);
-                    }
-                } else if (response instanceof TLRPC.TL_upload_cdnFileReuploadNeeded) {
-                    if (!reuploadingCdn) {
-                        clearOperation(requestInfo, false, false);
-                        reuploadingCdn = true;
-                        TLRPC.TL_upload_cdnFileReuploadNeeded res = (TLRPC.TL_upload_cdnFileReuploadNeeded) response;
-                        TLRPC.TL_upload_reuploadCdnFile req = new TLRPC.TL_upload_reuploadCdnFile();
-                        req.file_token = cdnToken;
-                        req.request_token = res.request_token;
-                        ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response1, error1) -> {
-                            reuploadingCdn = false;
-                            if (response1 instanceof Vector) {
-                                final Vector<TLRPC.TL_fileHash> vector = (Vector) response1;
-                                if (!vector.objects.isEmpty()) {
-                                    if (cdnHashes == null) {
-                                        cdnHashes = new HashMap<>();
-                                    }
-                                    for (int a1 = 0; a1 < vector.objects.size(); a1++) {
-                                        final TLRPC.TL_fileHash hash = vector.objects.get(a1);
-                                        cdnHashes.put(hash.offset, hash);
-                                    }
-                                }
+                        if (error.code == -2000) {
+                            requestInfos.remove(requestInfo);
+                            requestedBytesCount -= requestInfo.chunkSize;
+                            removePart(notRequestedBytesRanges, requestInfo.offset, requestInfo.offset + requestInfo.chunkSize);
+                            return;
+                        } else if (FileRefController.isFileRefError(error.text)) {
+                            requestReference(requestInfo);
+                            return;
+                        } else if (request instanceof TLRPC.TL_upload_getCdnFile) {
+                            if (error.text.equals("FILE_TOKEN_INVALID")) {
+                                isCdn = false;
+                                clearOperation(requestInfo, false, false);
                                 startDownloadRequest(connectionType);
-                            } else if (error1 != null) {
-                                if (error1.text.equals("FILE_TOKEN_INVALID") || error1.text.equals("REQUEST_TOKEN_INVALID")) {
-                                    isCdn = false;
-                                    clearOperation(requestInfo, false, false);
-                                    startDownloadRequest(connectionType);
-                                } else {
-                                    onFail(false, 0);
-                                }
+                                return;
                             }
-                        }, null, null, 0, this.datacenterId, ConnectionsManager.ConnectionTypeGeneric, true);
+                        }
                     }
-                } else {
-                    if (response instanceof TLRPC.TL_upload_file) {
-                        requestInfo.response = (TLRPC.TL_upload_file) response;
-                    } else if (response instanceof TLRPC.TL_upload_webFile) {
-                        requestInfo.responseWeb = (TLRPC.TL_upload_webFile) response;
-                        if (totalBytesCount == 0 && requestInfo.responseWeb.size != 0) {
-                            totalBytesCount = requestInfo.responseWeb.size;
+                    if (response instanceof TLRPC.TL_upload_fileCdnRedirect) {
+                        TLRPC.TL_upload_fileCdnRedirect res = (TLRPC.TL_upload_fileCdnRedirect) response;
+                        if (!res.file_hashes.isEmpty()) {
+                            if (cdnHashes == null) {
+                                cdnHashes = new HashMap<>();
+                            }
+                            for (int a1 = 0; a1 < res.file_hashes.size(); a1++) {
+                                TLRPC.TL_fileHash hash = res.file_hashes.get(a1);
+                                cdnHashes.put(hash.offset, hash);
+                            }
+                        }
+                        if (res.encryption_iv == null || res.encryption_key == null || res.encryption_iv.length != 16 || res.encryption_key.length != 32) {
+                            if (requestInfo.whenCancelled != null) {
+                                requestInfo.whenCancelled.run();
+                            }
+                            TLRPC.TL_error err = new TLRPC.TL_error();
+                            err.text = "bad redirect response";
+                            err.code = 400;
+                            processRequestResult(requestInfo, err);
+                        } else {
+                            isCdn = true;
+                            if (notCheckedCdnRanges == null) {
+                                notCheckedCdnRanges = new ArrayList<>();
+                                notCheckedCdnRanges.add(new Range(0, maxCdnParts));
+                            }
+                            cdnDatacenterId = res.dc_id;
+                            cdnIv = res.encryption_iv;
+                            cdnKey = res.encryption_key;
+                            cdnToken = res.file_token;
+                            clearOperation(requestInfo, false, false);
+                            startDownloadRequest(connectionType);
+                        }
+                    } else if (response instanceof TLRPC.TL_upload_cdnFileReuploadNeeded) {
+                        if (!reuploadingCdn) {
+                            clearOperation(requestInfo, false, false);
+                            reuploadingCdn = true;
+                            TLRPC.TL_upload_cdnFileReuploadNeeded res = (TLRPC.TL_upload_cdnFileReuploadNeeded) response;
+                            TLRPC.TL_upload_reuploadCdnFile req = new TLRPC.TL_upload_reuploadCdnFile();
+                            req.file_token = cdnToken;
+                            req.request_token = res.request_token;
+                            ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response1, error1) -> {
+                                Utilities.stageQueue.postRunnable(() -> {
+                                    reuploadingCdn = false;
+                                    if (response1 instanceof Vector) {
+                                        final Vector<TLRPC.TL_fileHash> vector = (Vector) response1;
+                                        if (!vector.objects.isEmpty()) {
+                                            if (cdnHashes == null) {
+                                                cdnHashes = new HashMap<>();
+                                            }
+                                            for (int a1 = 0; a1 < vector.objects.size(); a1++) {
+                                                final TLRPC.TL_fileHash hash = vector.objects.get(a1);
+                                                cdnHashes.put(hash.offset, hash);
+                                            }
+                                        }
+                                        startDownloadRequest(connectionType);
+                                    } else if (error1 != null) {
+                                        if (error1.text.equals("FILE_TOKEN_INVALID") || error1.text.equals("REQUEST_TOKEN_INVALID")) {
+                                            isCdn = false;
+                                            clearOperation(requestInfo, false, false);
+                                            startDownloadRequest(connectionType);
+                                        } else {
+                                            onFail(false, 0);
+                                        }
+                                    }
+                                });
+                            }, null, null, 0, this.datacenterId, ConnectionsManager.ConnectionTypeGeneric, true);
                         }
                     } else {
-                        requestInfo.responseCdn = (TLRPC.TL_upload_cdnFile) response;
-                    }
-                    if (response != null) {
-                        if (currentType == ConnectionsManager.FileTypeAudio) {
-                            StatsController.getInstance(currentAccount).incrementReceivedBytesCount(response.networkType, StatsController.TYPE_AUDIOS, response.getObjectSize() + 4);
-                        } else if (currentType == ConnectionsManager.FileTypeVideo) {
-                            StatsController.getInstance(currentAccount).incrementReceivedBytesCount(response.networkType, StatsController.TYPE_VIDEOS, response.getObjectSize() + 4);
-                        } else if (currentType == ConnectionsManager.FileTypePhoto) {
-                            StatsController.getInstance(currentAccount).incrementReceivedBytesCount(response.networkType, StatsController.TYPE_PHOTOS, response.getObjectSize() + 4);
-                        } else if (currentType == ConnectionsManager.FileTypeFile) {
-                            if (ext != null && (ext.toLowerCase().endsWith("mp3") || ext.toLowerCase().endsWith("m4a"))) {
-                                StatsController.getInstance(currentAccount).incrementReceivedBytesCount(response.networkType, StatsController.TYPE_MUSIC, response.getObjectSize() + 4);
-                            } else {
-                                StatsController.getInstance(currentAccount).incrementReceivedBytesCount(response.networkType, StatsController.TYPE_FILES, response.getObjectSize() + 4);
+                        if (response instanceof TLRPC.TL_upload_file) {
+                            requestInfo.response = (TLRPC.TL_upload_file) response;
+                        } else if (response instanceof TLRPC.TL_upload_webFile) {
+                            requestInfo.responseWeb = (TLRPC.TL_upload_webFile) response;
+                            if (totalBytesCount == 0 && requestInfo.responseWeb.size != 0) {
+                                totalBytesCount = requestInfo.responseWeb.size;
+                            }
+                        } else {
+                            requestInfo.responseCdn = (TLRPC.TL_upload_cdnFile) response;
+                        }
+                        if (response != null) {
+                            if (currentType == ConnectionsManager.FileTypeAudio) {
+                                StatsController.getInstance(currentAccount).incrementReceivedBytesCount(response.networkType, StatsController.TYPE_AUDIOS, response.getObjectSize() + 4);
+                            } else if (currentType == ConnectionsManager.FileTypeVideo) {
+                                StatsController.getInstance(currentAccount).incrementReceivedBytesCount(response.networkType, StatsController.TYPE_VIDEOS, response.getObjectSize() + 4);
+                            } else if (currentType == ConnectionsManager.FileTypePhoto) {
+                                StatsController.getInstance(currentAccount).incrementReceivedBytesCount(response.networkType, StatsController.TYPE_PHOTOS, response.getObjectSize() + 4);
+                            } else if (currentType == ConnectionsManager.FileTypeFile) {
+                                if (ext != null && (ext.toLowerCase().endsWith("mp3") || ext.toLowerCase().endsWith("m4a"))) {
+                                    StatsController.getInstance(currentAccount).incrementReceivedBytesCount(response.networkType, StatsController.TYPE_MUSIC, response.getObjectSize() + 4);
+                                } else {
+                                    StatsController.getInstance(currentAccount).incrementReceivedBytesCount(response.networkType, StatsController.TYPE_FILES, response.getObjectSize() + 4);
+                                }
                             }
                         }
+                        processRequestResult(requestInfo, error);
+                        if (requestInfo.whenCancelled != null) {
+                            requestInfo.whenCancelled.run();
+                        }
                     }
-                    processRequestResult(requestInfo, error);
-                    if (requestInfo.whenCancelled != null) {
-                        requestInfo.whenCancelled.run();
-                    }
-                }
+                });
             }, null, null, flags, datacenterId, connectionType, isLast);
             if (BuildVars.LOGS_ENABLED) {
                 FileLog.d("debug_loading: " + cacheFileFinal.getName() + " dc=" + datacenterId + " send reqId " + requestInfo.requestToken + " offset=" + requestInfo.offset + " conType=" + connectionType + " priority=" + priority);
