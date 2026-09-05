@@ -39,6 +39,9 @@ public class FileLoader extends BaseController {
     public static final int PRIORITY_NORMAL = 1;
     public static final int PRIORITY_LOW = 0;
 
+    public static final int MAX_FILE_LOADERS = 8;
+    public static final int MAX_FILE_CONCURRENT_CHUNKS = 8;
+
     private int priorityIncreasePointer;
 
     private static Pattern sentPattern;

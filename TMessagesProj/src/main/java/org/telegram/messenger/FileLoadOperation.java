@@ -156,6 +156,7 @@ public class FileLoadOperation {
     private int cdnChunkCheckSize = 1024 * 128;
     private int maxDownloadRequests = 4;
     private int maxDownloadRequestsBig = 4;
+    public int maxConcurrentChunks = 8;
     private int bigFileSizeFrom = 10 * 1024 * 1024;
     private int maxCdnParts = (int) (FileLoader.DEFAULT_MAX_FILE_SIZE / downloadChunkSizeBig);
 
@@ -294,6 +295,7 @@ public class FileLoadOperation {
             maxDownloadRequestsBig = 8;
             downloadChunkSizeAnimation = 1024 * 512;
             maxDownloadRequestsAnimation = 8;
+            maxConcurrentChunks = 8;
             if (fastDownload) {
                 downloadChunkSize = 1024 * 512;
             }
@@ -304,8 +306,17 @@ public class FileLoadOperation {
             maxDownloadRequests = 4;
             maxDownloadRequestsBig = 4;
             maxDownloadRequestsAnimation = 4;
+            maxConcurrentChunks = 4;
         }
         maxCdnParts = (int) (FileLoader.DEFAULT_MAX_FILE_SIZE / downloadChunkSizeBig);
+    }
+
+    public void requestNextChunk() {
+        startDownloadRequest(-1);
+    }
+
+    public void requestNextChunk(int connectionType) {
+        startDownloadRequest(connectionType);
     }
 
     public FileLoadOperation(ImageLocation imageLocation, Object parent, String extension, long size) {
