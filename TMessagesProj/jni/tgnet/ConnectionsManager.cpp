@@ -509,10 +509,19 @@ inline NativeByteBuffer *decompressGZip(NativeByteBuffer *data) {
             break;
         }
         if (retCode == Z_OK) {
-            NativeByteBuffer *newResult = BuffersStorage::getInstance().getFreeBuffer(result->capacity() * 2);
-            memcpy(newResult->bytes(), result->bytes(), result->capacity());
-            stream.avail_out = newResult->capacity() - result->capacity();
-            stream.next_out = newResult->bytes() + result->capacity();
+            uint32_t oldCap = result->capacity();
+            if (oldCap == 0 || oldCap > 64 * 1024 * 1024) {
+                if (LOGS_ENABLED) DEBUG_E("can't decompress data: invalid capacity");
+                exit(1);
+            }
+            NativeByteBuffer *newResult = BuffersStorage::getInstance().getFreeBuffer(oldCap * 2);
+            if (newResult == nullptr || newResult->bytes() == nullptr || result->bytes() == nullptr) {
+                if (LOGS_ENABLED) DEBUG_E("can't allocate decompressed buffer");
+                exit(1);
+            }
+            memcpy(newResult->bytes(), result->bytes(), oldCap);
+            stream.avail_out = newResult->capacity() - oldCap;
+            stream.next_out = newResult->bytes() + oldCap;
             result->reuse();
             result = newResult;
         } else {

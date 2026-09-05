@@ -280,6 +280,13 @@ void NativeByteBuffer::writeBytes(ByteArray *b, bool *error) {
 }
 
 void NativeByteBuffer::writeBytesInternal(uint8_t *b, uint32_t offset, uint32_t length) {
+    if (b == nullptr || length == 0 || buffer == nullptr) {
+        return;
+    }
+    if (_position + length > _limit) {
+        if (LOGS_ENABLED) DEBUG_E("write bytes internal error: position + length > limit");
+        return;
+    }
     memcpy(buffer + _position, b + offset, sizeof(uint8_t) * length);
     _position += length;
 }
@@ -527,7 +534,10 @@ bool NativeByteBuffer::readBool(bool *error) {
 }
 
 void NativeByteBuffer::readBytes(uint8_t *b, uint32_t length, bool *error) {
-    if (length > _limit - _position || calculateSizeOnly) {
+    if (b == nullptr || length == 0) {
+        return;
+    }
+    if (length > _limit - _position || calculateSizeOnly || buffer == nullptr) {
         if (error != nullptr) {
             *error = true;
         }
@@ -539,7 +549,10 @@ void NativeByteBuffer::readBytes(uint8_t *b, uint32_t length, bool *error) {
 }
 
 ByteArray *NativeByteBuffer::readBytes(uint32_t length, bool *error) {
-    if (length > _limit - _position || calculateSizeOnly) {
+    if (length == 0) {
+        return new ByteArray(0);
+    }
+    if (length > _limit - _position || calculateSizeOnly || buffer == nullptr || length > 32 * 1024 * 1024) {
         if (error != nullptr) {
             *error = true;
         }
@@ -547,14 +560,16 @@ ByteArray *NativeByteBuffer::readBytes(uint32_t length, bool *error) {
         return nullptr;
     }
     ByteArray *byteArray = new ByteArray(length);
-    memcpy(byteArray->bytes, buffer + _position, sizeof(uint8_t) * length);
+    if (byteArray != nullptr && byteArray->bytes != nullptr) {
+        memcpy(byteArray->bytes, buffer + _position, sizeof(uint8_t) * length);
+    }
     _position += length;
     return byteArray;
 }
 
 std::string NativeByteBuffer::readString(bool *error) {
     uint32_t sl = 1;
-    if (_position + 1 > _limit || calculateSizeOnly) {
+    if (_position + 1 > _limit || calculateSizeOnly || buffer == nullptr) {
         if (error != nullptr) {
             *error = true;
         }
@@ -578,7 +593,7 @@ std::string NativeByteBuffer::readString(bool *error) {
     if (addition != 0) {
         addition = 4 - addition;
     }
-    if (_position + l + addition > _limit) {
+    if (l > 32 * 1024 * 1024 || _position + l + addition > _limit) {
         if (error != nullptr) {
             *error = true;
         }
@@ -592,7 +607,7 @@ std::string NativeByteBuffer::readString(bool *error) {
 
 ByteArray *NativeByteBuffer::readByteArray(bool *error) {
     uint32_t sl = 1;
-    if (_position + 1 > _limit || calculateSizeOnly) {
+    if (_position + 1 > _limit || calculateSizeOnly || buffer == nullptr) {
         if (error != nullptr) {
             *error = true;
         }
@@ -616,7 +631,7 @@ ByteArray *NativeByteBuffer::readByteArray(bool *error) {
     if (addition != 0) {
         addition = 4 - addition;
     }
-    if (_position + l + addition > _limit) {
+    if (l > 32 * 1024 * 1024 || _position + l + addition > _limit) {
         if (error != nullptr) {
             *error = true;
         }
@@ -624,14 +639,16 @@ ByteArray *NativeByteBuffer::readByteArray(bool *error) {
         return nullptr;
     }
     ByteArray *result = new ByteArray(l);
-    memcpy(result->bytes, buffer + _position, sizeof(uint8_t) * l);
+    if (l > 0 && result != nullptr && result->bytes != nullptr) {
+        memcpy(result->bytes, buffer + _position, sizeof(uint8_t) * l);
+    }
     _position += l + addition;
     return result;
 }
 
 NativeByteBuffer *NativeByteBuffer::readByteBuffer(bool copy, bool *error) {
     uint32_t sl = 1;
-    if (_position + 1 > _limit || calculateSizeOnly) {
+    if (_position + 1 > _limit || calculateSizeOnly || buffer == nullptr) {
         if (error != nullptr) {
             *error = true;
         }
@@ -655,7 +672,7 @@ NativeByteBuffer *NativeByteBuffer::readByteBuffer(bool copy, bool *error) {
     if (addition != 0) {
         addition = 4 - addition;
     }
-    if (_position + l + addition > _limit) {
+    if (l > 32 * 1024 * 1024 || _position + l + addition > _limit) {
         if (error != nullptr) {
             *error = true;
         }
@@ -665,7 +682,9 @@ NativeByteBuffer *NativeByteBuffer::readByteBuffer(bool copy, bool *error) {
     NativeByteBuffer *result = nullptr;
     if (copy) {
         result = BuffersStorage::getInstance().getFreeBuffer(l);
-        memcpy(result->buffer, buffer + _position, sizeof(uint8_t) * l);
+        if (l > 0 && result != nullptr && result->buffer != nullptr) {
+            memcpy(result->buffer, buffer + _position, sizeof(uint8_t) * l);
+        }
     } else {
         result = new NativeByteBuffer(buffer + _position, l);
     }

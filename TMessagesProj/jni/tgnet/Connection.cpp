@@ -101,12 +101,14 @@ void Connection::onReceivedData(NativeByteBuffer *buffer) {
                 restOfTheData = newBuffer;
             }
         } else {
-            uint32_t len;
-            if (lastPacketLength - restOfTheData->position() <= buffer->limit()) {
-                len = lastPacketLength - restOfTheData->position();
-            } else {
-                len = buffer->limit();
+            if (lastPacketLength <= restOfTheData->position()) {
+                restOfTheData->reuse();
+                restOfTheData = nullptr;
+                lastPacketLength = 0;
+                return;
             }
+            uint32_t needed = lastPacketLength - restOfTheData->position();
+            uint32_t len = (needed <= buffer->limit()) ? needed : buffer->limit();
             uint32_t oldLimit = buffer->limit();
             buffer->limit(len);
             restOfTheData->writeBytes(buffer);
@@ -225,6 +227,11 @@ void Connection::onReceivedData(NativeByteBuffer *buffer) {
             if (LOGS_ENABLED) DEBUG_D("connection(%p, account%u, dc%u, type %d) received message len %u equal to packet size", this, currentDatacenter->instanceNum, currentDatacenter->getDatacenterId(), connectionType, currentPacketLength);
         } else {
             if (LOGS_ENABLED) DEBUG_D("connection(%p, account%u, dc%u, type %d) received packet size less(%u) then message size(%u)", this, currentDatacenter->instanceNum, currentDatacenter->getDatacenterId(), connectionType, buffer->remaining(), currentPacketLength);
+
+            if (len == 0 || len > 2 * 1024 * 1024) {
+                reconnect();
+                break;
+            }
 
             if (restOfTheData != nullptr && restOfTheData->capacity() < len) {
                 reuseLater = restOfTheData;

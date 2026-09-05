@@ -27,6 +27,11 @@ ByteArray::ByteArray(uint32_t len) {
 
 
 ByteArray::ByteArray(ByteArray *byteArray) {
+    if (byteArray == nullptr || byteArray->length == 0 || byteArray->bytes == nullptr) {
+        bytes = nullptr;
+        length = 0;
+        return;
+    }
     bytes = new uint8_t[byteArray->length];
     if (bytes == nullptr) {
         if (LOGS_ENABLED) DEBUG_E("unable to allocate byte buffer %u", byteArray->length);
@@ -37,6 +42,11 @@ ByteArray::ByteArray(ByteArray *byteArray) {
 }
 
 ByteArray::ByteArray(uint8_t *buffer, uint32_t len) {
+    if (buffer == nullptr || len == 0) {
+        bytes = nullptr;
+        length = 0;
+        return;
+    }
     bytes = new uint8_t[len];
     if (bytes == nullptr) {
         if (LOGS_ENABLED) DEBUG_E("unable to allocate byte buffer %u", len);
