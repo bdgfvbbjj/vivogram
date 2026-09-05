@@ -649,10 +649,10 @@ JNIEXPORT void Java_org_telegram_messenger_Utilities_stackBlurBitmap(JNIEnv *env
     const int divsum = SQUARE((div + 1) >> 1);
 
     // Small buffers
-    int *stack = new int[div * 4];
+    int stack[div * 4];
     zeroClearInt(stack, div * 4);
 
-    int *vmin = new int[MAX(w, h)];
+    int vmin[MAX(w, h)];
     zeroClearInt(vmin, MAX(w, h));
 
     // Large buffers
@@ -682,7 +682,7 @@ JNIEXPORT void Java_org_telegram_messenger_Utilities_stackBlurBitmap(JNIEnv *env
     int stackstart;
     int rbs;
 
-    int yi = 0;
+    int yw = 0, yi = 0;
     for (y = 0; y < h; y++) {
         ainsum = aoutsum = asum = rinsum = ginsum = binsum = routsum = goutsum = boutsum = rsum = gsum = bsum = 0;
 
@@ -766,6 +766,7 @@ JNIEXPORT void Java_org_telegram_messenger_Utilities_stackBlurBitmap(JNIEnv *env
 
             yi++;
         }
+        yw += w;
     }
 
     for (x = 0; x < w; x++) {
@@ -861,8 +862,6 @@ JNIEXPORT void Java_org_telegram_messenger_Utilities_stackBlurBitmap(JNIEnv *env
         }
     }
 
-    delete[] stack;
-    delete[] vmin;
     delete[] r;
     delete[] g;
     delete[] b;
@@ -921,7 +920,7 @@ JNIEXPORT jboolean JNICALL Java_org_telegram_messenger_Utilities_drawDitheredGra
         offset = y * info.stride;
         for (x = 0; x < info.width; x++) {
             // triangular probability density function dither noise
-            noise = (rand() - rand()) / 255.F / (float) RAND_MAX;
+            noise = (rand() - rand()) / 255.F / RAND_MAX;
 
             // alpha channel
             bitmapPixelsComponents[offset + x * 4 + 3] = 255;
@@ -1073,7 +1072,7 @@ JNIEXPORT jboolean JNICALL Java_org_telegram_messenger_Utilities_drawDitheredGra
 //    return outSize;*/
 //}
 
-static std::vector<std::pair<float, float>> gatherPositions(std::vector<std::pair<float, float>> list, int phase) {
+std::vector<std::pair<float, float>> gatherPositions(std::vector<std::pair<float, float>> list, int phase) {
     std::vector<std::pair<float, float>> result(4);
     for (int i = 0; i < 4; i++) {
         int pos = phase + i * 2;

@@ -19,9 +19,7 @@
 
 extern "C" {
 #ifdef __cplusplus
-#ifndef __STDC_CONSTANT_MACROS
 #define __STDC_CONSTANT_MACROS
-#endif
 #ifdef _STDINT_H
 #undef _STDINT_H
 #endif
@@ -426,7 +424,7 @@ int decodePacket(AVCodecContext *context, AVPacket *packet,
         return transformError(result);
     }
 
-    [[maybe_unused]] int inSampleSize = av_get_bytes_per_sample(sampleFormat);
+    int inSampleSize = av_get_bytes_per_sample(sampleFormat);
     int outSampleSize = av_get_bytes_per_sample(context->request_sample_fmt);
     int outSamples = swr_get_out_samples(resampleContext, sampleCount);
     int bufferOutSize = outSampleSize * channelCount * outSamples;

@@ -196,7 +196,7 @@ Datacenter::Datacenter(int32_t instance, NativeByteBuffer *data) {
 TcpAddress *Datacenter::getCurrentAddress(uint32_t flags) {
     uint32_t currentAddressNum;
     std::vector<TcpAddress> *addresses;
-    if (flags == 0 && (authKeyPerm == nullptr || (PFS_ENABLED && authKeyTemp == nullptr)) && !addressesIpv4Temp.empty()) {
+    if (flags == 0 && (authKeyPerm == nullptr || PFS_ENABLED && authKeyTemp == nullptr) && !addressesIpv4Temp.empty()) {
         flags = TcpAddressFlagTemp;
     }
     if ((flags & TcpAddressFlagTemp) != 0) {
@@ -254,7 +254,7 @@ int32_t Datacenter::getCurrentPort(uint32_t flags) {
     uint32_t currentAddressNum;
     uint32_t currentPortNum;
     std::vector<TcpAddress> *addresses;
-    if (flags == 0 && (authKeyPerm == nullptr || (PFS_ENABLED && authKeyTemp == nullptr)) && !addressesIpv4Temp.empty()) {
+    if (flags == 0 && (authKeyPerm == nullptr || PFS_ENABLED && authKeyTemp == nullptr) && !addressesIpv4Temp.empty()) {
         flags = TcpAddressFlagTemp;
     }
     if ((flags & TcpAddressFlagTemp) != 0) {
@@ -374,7 +374,7 @@ void Datacenter::nextAddressOrPort(uint32_t flags) {
     uint32_t currentPortNum;
     uint32_t currentAddressNum;
     std::vector<TcpAddress> *addresses;
-    if (flags == 0 && (authKeyPerm == nullptr || (PFS_ENABLED && authKeyTemp == nullptr)) && !addressesIpv4Temp.empty()) {
+    if (flags == 0 && (authKeyPerm == nullptr || PFS_ENABLED && authKeyTemp == nullptr) && !addressesIpv4Temp.empty()) {
         flags = TcpAddressFlagTemp;
     }
     if ((flags & TcpAddressFlagTemp) != 0) {
@@ -443,7 +443,7 @@ void Datacenter::nextAddressOrPort(uint32_t flags) {
 
 bool Datacenter::isCustomPort(uint32_t flags) {
     uint32_t currentPortNum;
-    if (flags == 0 && (authKeyPerm == nullptr || (PFS_ENABLED && authKeyTemp == nullptr)) && !addressesIpv4Temp.empty()) {
+    if (flags == 0 && (authKeyPerm == nullptr || PFS_ENABLED && authKeyTemp == nullptr) && !addressesIpv4Temp.empty()) {
         flags = TcpAddressFlagTemp;
     }
     if ((flags & TcpAddressFlagTemp) != 0) {
@@ -1243,9 +1243,6 @@ NativeByteBuffer *Datacenter::createRequestsData(std::vector<std::unique_ptr<Net
 }
 
 bool Datacenter::decryptServerResponse(int64_t keyId, uint8_t *key, uint8_t *data, uint32_t length, Connection *connection) {
-    if (key == nullptr || data == nullptr || connection == nullptr || length < 32 || length > 2 * 1024 * 1024) {
-        return false;
-    }
     int64_t authKeyId;
     ByteArray *authKey = getAuthKey(connection->getConnectionType(), false, &authKeyId, 1);
     if (authKey == nullptr) {
@@ -1256,13 +1253,11 @@ bool Datacenter::decryptServerResponse(int64_t keyId, uint8_t *key, uint8_t *dat
     generateMessageKey(instanceNum, authKey->bytes, key, messageKey + 32, true, 2);
     aesIgeEncryption(data, messageKey + 32, messageKey + 64, false, false, length);
 
-    uint32_t messageLength = 0;
+    uint32_t messageLength;
     memcpy(&messageLength, data + 28, sizeof(uint32_t));
-    if (messageLength > length - 32) {
-        return false;
-    }
     uint32_t paddingLength = length - (messageLength + 32);
 
+    error |= (messageLength > length - 32);
     error |= (paddingLength < 12);
     error |= (paddingLength > 1024);
 

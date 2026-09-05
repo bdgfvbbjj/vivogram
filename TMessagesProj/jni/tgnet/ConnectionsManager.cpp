@@ -509,19 +509,10 @@ inline NativeByteBuffer *decompressGZip(NativeByteBuffer *data) {
             break;
         }
         if (retCode == Z_OK) {
-            uint32_t oldCap = result->capacity();
-            if (oldCap == 0 || oldCap > 64 * 1024 * 1024) {
-                if (LOGS_ENABLED) DEBUG_E("can't decompress data: invalid capacity");
-                exit(1);
-            }
-            NativeByteBuffer *newResult = BuffersStorage::getInstance().getFreeBuffer(oldCap * 2);
-            if (newResult == nullptr || newResult->bytes() == nullptr || result->bytes() == nullptr) {
-                if (LOGS_ENABLED) DEBUG_E("can't allocate decompressed buffer");
-                exit(1);
-            }
-            memcpy(newResult->bytes(), result->bytes(), oldCap);
-            stream.avail_out = newResult->capacity() - oldCap;
-            stream.next_out = newResult->bytes() + oldCap;
+            NativeByteBuffer *newResult = BuffersStorage::getInstance().getFreeBuffer(result->capacity() * 2);
+            memcpy(newResult->bytes(), result->bytes(), result->capacity());
+            stream.avail_out = newResult->capacity() - result->capacity();
+            stream.next_out = newResult->bytes() + result->capacity();
             result->reuse();
             result = newResult;
         } else {
@@ -2209,7 +2200,7 @@ void ConnectionsManager::failNotRunningRequest(int32_t token) {
                 if (LOGS_ENABLED) DEBUG_D("cancelled queued rpc request %p - %s", request->rawRequest, typeid(*request->rawRequest).name());
                 requestsQueue.erase(iter);
                 removeRequestFromGuid(token);
-                return;
+                return true;
             }
         }
     });
@@ -3284,7 +3275,7 @@ std::string base64UrlDecode(std::string base64) {
         size_t left = std::min(base64.size() - i, static_cast<size_t>(4));
         int c = 0;
         for (size_t t = 0; t < left; t++) {
-            auto value = url_char_to_value[static_cast<unsigned char>(base64.c_str()[i++])];
+            auto value = url_char_to_value[base64.c_str()[i++]];
             if (value == 64) {
                 return "";
             }

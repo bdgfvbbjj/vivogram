@@ -15,46 +15,6 @@
 
 JavaVM *java;
 
-struct JNIEnvScope {
-    JNIEnv *env = nullptr;
-    bool attached = false;
-
-    JNIEnvScope() {
-        if (java != nullptr) {
-            jint res = java->GetEnv((void **) &env, JNI_VERSION_1_6);
-            if (res == JNI_EDETACHED) {
-                JavaVMAttachArgs args;
-                args.version = JNI_VERSION_1_6;
-                args.name = nullptr;
-                args.group = nullptr;
-                if (java->AttachCurrentThread(&env, &args) == JNI_OK) {
-                    attached = true;
-                } else {
-                    env = nullptr;
-                }
-            }
-        }
-    }
-
-    ~JNIEnvScope() {
-        if (attached && java != nullptr) {
-            java->DetachCurrentThread();
-        }
-    }
-
-    JNIEnv *operator->() const {
-        return env;
-    }
-
-    JNIEnv *get() const {
-        return env;
-    }
-
-    explicit operator bool() const {
-        return env != nullptr;
-    }
-};
-
 jclass jclass_RequestTimeDelegate;
 jmethodID jclass_RequestTimeDelegate_run;
 
@@ -150,10 +110,6 @@ void sendRequest(JNIEnv *env, jclass c, jint instanceNum, jlong object, jint fla
     TL_api_request *request = new TL_api_request();
     request->request = (NativeByteBuffer *) (intptr_t) object;
     ConnectionsManager::getInstance(instanceNum).sendRequest(request, ([instanceNum, token](TLObject *response, TL_error *error, int32_t networkType, int64_t responseTime, int64_t msgId, int32_t dcId) {
-        JNIEnvScope envScope;
-        if (!envScope) {
-            return;
-        }
         TL_api_response *resp = (TL_api_response *) response;
         jlong ptr = 0;
         jint errorCode = 0;
@@ -165,39 +121,27 @@ void sendRequest(JNIEnv *env, jclass c, jint instanceNum, jlong object, jint fla
             const char *text = error->text.c_str();
             size_t size = error->text.size();
             if (check_utf8(text, size)) {
-                errorText = envScope->NewStringUTF(text);
+                errorText = jniEnv[instanceNum]->NewStringUTF(text);
             } else {
-                errorText = envScope->NewStringUTF("UTF-8 ERROR");
+                errorText = jniEnv[instanceNum]->NewStringUTF("UTF-8 ERROR");
             }
         }
-        envScope->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onRequestComplete, instanceNum, token, ptr, errorCode, errorText, networkType, responseTime, msgId, dcId);
+        jniEnv[instanceNum]->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onRequestComplete, instanceNum, token, ptr, errorCode, errorText, networkType, responseTime, msgId, dcId);
         if (errorText != nullptr) {
-            envScope->DeleteLocalRef(errorText);
+            jniEnv[instanceNum]->DeleteLocalRef(errorText);
         }
     }), ([instanceNum, token] {
-        JNIEnvScope envScope;
-        if (envScope) {
-            envScope->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onRequestQuickAck, instanceNum, token);
-        }
+        jniEnv[instanceNum]->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onRequestQuickAck, instanceNum, token);
     }), ([instanceNum, token] {
-        JNIEnvScope envScope;
-        if (envScope) {
-            envScope->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onRequestWriteToSocket, instanceNum, token);
-        }
+        jniEnv[instanceNum]->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onRequestWriteToSocket, instanceNum, token);
     }), ([instanceNum, token] {
-        JNIEnvScope envScope;
-        if (envScope) {
-            envScope->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onRequestClear, instanceNum, token, false);
-        }
+        jniEnv[instanceNum]->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onRequestClear, instanceNum, token, false);
     }), (uint32_t) flags, (uint32_t) datacenterId, (ConnectionType) connectionType, immediate, token);
 }
 
 void cancelRequest(JNIEnv *env, jclass c, jint instanceNum, jint token, jboolean notifyServer) {
     return ConnectionsManager::getInstance(instanceNum).cancelRequest(token, notifyServer, ([instanceNum, token]() -> void {
-        JNIEnvScope envScope;
-        if (envScope) {
-            envScope->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onRequestClear, instanceNum, token, true);
-        }
+        jniEnv[instanceNum]->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onRequestClear, instanceNum, token, true);
     }));
 }
 
@@ -365,12 +309,9 @@ jlong checkProxy(JNIEnv *env, jclass c, jint instanceNum, jstring address, jint 
         requestTimeFunc = env->NewGlobalRef(requestTimeFunc);
     }
 
-    jlong result = ConnectionsManager::getInstance(instanceNum).checkProxy(addressStr, (uint16_t) port, usernameStr, passwordStr, secretStr, [requestTimeFunc](int64_t time) {
+    jlong result = ConnectionsManager::getInstance(instanceNum).checkProxy(addressStr, (uint16_t) port, usernameStr, passwordStr, secretStr, [instanceNum, requestTimeFunc](int64_t time) {
         if (requestTimeFunc != nullptr) {
-            JNIEnvScope envScope;
-            if (envScope) {
-                envScope->CallVoidMethod(requestTimeFunc, jclass_RequestTimeDelegate_run, time);
-            }
+            jniEnv[instanceNum]->CallVoidMethod(requestTimeFunc, jclass_RequestTimeDelegate_run, time);
         }
     }, requestTimeFunc);
 
@@ -393,132 +334,83 @@ jlong checkProxy(JNIEnv *env, jclass c, jint instanceNum, jstring address, jint 
 class Delegate : public ConnectiosManagerDelegate {
     
     void onUpdate(int32_t instanceNum) {
-        JNIEnvScope envScope;
-        if (envScope) {
-            envScope->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onUpdate, instanceNum);
-        }
+        jniEnv[instanceNum]->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onUpdate, instanceNum);
     }
     
     void onSessionCreated(int32_t instanceNum) {
-        JNIEnvScope envScope;
-        if (envScope) {
-            envScope->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onSessionCreated, instanceNum);
-        }
+        jniEnv[instanceNum]->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onSessionCreated, instanceNum);
     }
     
     void onConnectionStateChanged(ConnectionState state, int32_t instanceNum) {
-        JNIEnvScope envScope;
-        if (envScope) {
-            envScope->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onConnectionStateChanged, state, instanceNum);
-        }
+        jniEnv[instanceNum]->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onConnectionStateChanged, state, instanceNum);
     }
     
     void onUnparsedMessageReceived(int64_t reqMessageId, NativeByteBuffer *buffer, ConnectionType connectionType, int32_t instanceNum) {
         if (connectionType == ConnectionTypeGeneric) {
-            JNIEnvScope envScope;
-            if (envScope) {
-                envScope->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onUnparsedMessageReceived, (jlong) (intptr_t) buffer, instanceNum, reqMessageId);
-            }
+            jniEnv[instanceNum]->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onUnparsedMessageReceived, (jlong) (intptr_t) buffer, instanceNum, reqMessageId);
         }
     }
     
     void onLogout(int32_t instanceNum) {
-        JNIEnvScope envScope;
-        if (envScope) {
-            envScope->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onLogout, instanceNum);
-        }
+        jniEnv[instanceNum]->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onLogout, instanceNum);
     }
     
     void onUpdateConfig(TL_config *config, int32_t instanceNum) {
         NativeByteBuffer *buffer = BuffersStorage::getInstance().getFreeBuffer(config->getObjectSize());
         config->serializeToStream(buffer);
         buffer->position(0);
-        JNIEnvScope envScope;
-        if (envScope) {
-            envScope->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onUpdateConfig, (jlong) (intptr_t) buffer, instanceNum);
-        }
+        jniEnv[instanceNum]->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onUpdateConfig, (jlong) (intptr_t) buffer, instanceNum);
         buffer->reuse();
     }
     
     void onInternalPushReceived(int32_t instanceNum) {
-        JNIEnvScope envScope;
-        if (envScope) {
-            envScope->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onInternalPushReceived, instanceNum);
-        }
+        jniEnv[instanceNum]->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onInternalPushReceived, instanceNum);
     }
 
     void onBytesReceived(int32_t amount, int32_t networkType, int32_t instanceNum) {
-        JNIEnvScope envScope;
-        if (envScope) {
-            envScope->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onBytesReceived, amount, networkType, instanceNum);
-        }
+        jniEnv[instanceNum]->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onBytesReceived, amount, networkType, instanceNum);
     }
 
     void onBytesSent(int32_t amount, int32_t networkType, int32_t instanceNum) {
-        JNIEnvScope envScope;
-        if (envScope) {
-            envScope->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onBytesSent, amount, networkType, instanceNum);
-        }
+        jniEnv[instanceNum]->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onBytesSent, amount, networkType, instanceNum);
     }
 
     void onRequestNewServerIpAndPort(int32_t second, int32_t instanceNum) {
-        JNIEnvScope envScope;
-        if (envScope) {
-            envScope->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onRequestNewServerIpAndPort, second, instanceNum);
-        }
+        jniEnv[instanceNum]->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onRequestNewServerIpAndPort, second, instanceNum);
     }
 
     void onProxyError(int32_t instanceNum) {
-        JNIEnvScope envScope;
-        if (envScope) {
-            envScope->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onProxyError);
-        }
+        jniEnv[instanceNum]->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onProxyError);
     }
 
     void getHostByName(std::string domain, int32_t instanceNum, ConnectionSocket *socket) {
-        JNIEnvScope envScope;
-        if (envScope) {
-            jstring domainName = envScope->NewStringUTF(domain.c_str());
-            envScope->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_getHostByName, domainName, (jlong) (intptr_t) socket);
-            envScope->DeleteLocalRef(domainName);
-        }
+        jstring domainName = jniEnv[instanceNum]->NewStringUTF(domain.c_str());
+        jniEnv[instanceNum]->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_getHostByName, domainName, (jlong) (intptr_t) socket);
+        jniEnv[instanceNum]->DeleteLocalRef(domainName);
     }
 
     int32_t getInitFlags(int32_t instanceNum) {
-        JNIEnvScope envScope;
-        if (envScope) {
-            return (int32_t) envScope->CallStaticIntMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_getInitFlags);
-        }
-        return 0;
+        return (int32_t) jniEnv[instanceNum]->CallStaticIntMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_getInitFlags);
     }
 
     void onPremiumFloodWait(int32_t instanceNum, int32_t requestToken, bool isUpload) {
-        JNIEnvScope envScope;
-        if (envScope) {
-            envScope->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onPremiumFloodWait, instanceNum, requestToken, isUpload);
-        }
+        jniEnv[instanceNum]->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onPremiumFloodWait, instanceNum, requestToken, isUpload);
     }
 
     void onIntegrityCheckClassic(int32_t instanceNum, int32_t requestToken, std::string project, std::string nonce) {
-        JNIEnvScope envScope;
-        if (envScope) {
-            jstring projectStr = envScope->NewStringUTF(project.c_str());
-            jstring nonceStr = envScope->NewStringUTF(nonce.c_str());
-            envScope->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onIntegrityCheckClassic, instanceNum, requestToken, projectStr, nonceStr);
-            envScope->DeleteLocalRef(projectStr);
-            envScope->DeleteLocalRef(nonceStr);
-        }
+        jstring projectStr = jniEnv[instanceNum]->NewStringUTF(project.c_str());
+        jstring nonceStr = jniEnv[instanceNum]->NewStringUTF(nonce.c_str());
+        jniEnv[instanceNum]->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onIntegrityCheckClassic, instanceNum, requestToken, projectStr, nonceStr);
+        jniEnv[instanceNum]->DeleteLocalRef(projectStr);
+        jniEnv[instanceNum]->DeleteLocalRef(nonceStr);
     }
 
     void onCaptchaCheck(int32_t instanceNum, int32_t requestToken, std::string action, std::string key_id) {
-        JNIEnvScope envScope;
-        if (envScope) {
-            jstring actionStr = envScope->NewStringUTF(action.c_str());
-            jstring keyIdStr = envScope->NewStringUTF(key_id.c_str());
-            envScope->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onCaptchaCheck, instanceNum, requestToken, actionStr, keyIdStr);
-            envScope->DeleteLocalRef(actionStr);
-            envScope->DeleteLocalRef(keyIdStr);
-        }
+        jstring actionStr = jniEnv[instanceNum]->NewStringUTF(action.c_str());
+        jstring keyIdStr = jniEnv[instanceNum]->NewStringUTF(key_id.c_str());
+        jniEnv[instanceNum]->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onCaptchaCheck, instanceNum, requestToken, actionStr, keyIdStr);
+        jniEnv[instanceNum]->DeleteLocalRef(actionStr);
+        jniEnv[instanceNum]->DeleteLocalRef(keyIdStr);
     }
 
 };
