@@ -107,7 +107,7 @@ namespace tgvoip{
 		std::function<void()> entry;
 		pthread_t thread;
 		const char* name;
-		bool maxPriority=false;
+		[[maybe_unused]] bool maxPriority=false;
 		bool valid=false;
 	};
 }
