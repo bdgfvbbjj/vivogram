@@ -2267,7 +2267,7 @@ public class FileLoadOperation {
         if (isStory) {
             count = Math.max(0, currentMaxDownloadRequests - requestInfos.size());
         } else {
-            if (streamPriorityStartOffset == 0 && !nextPartWasPreloaded && (!isPreloadVideoOperation || moovFound != 0) && totalBytesCount > 0) {
+            if (streamPriorityStartOffset == 0 && !nextPartWasPreloaded && (!isPreloadVideoOperation || moovFound != 0) && (totalBytesCount > 0 || VivogramConfig.isFastDownload())) {
                 count = Math.max(0, currentMaxDownloadRequests - requestInfos.size());
             }
         }

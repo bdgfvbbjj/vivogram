@@ -234,7 +234,7 @@ public class VideoPlayer implements Player.Listener, VideoListener, AnalyticsLis
     private void ensurePlayerCreated() {
         DefaultLoadControl loadControl;
         boolean fast = VivogramConfig.isFastDownload();
-        int minBufferMs = fast ? 1500 : DefaultLoadControl.DEFAULT_MIN_BUFFER_MS;
+        int minBufferMs = fast ? 1000 : DefaultLoadControl.DEFAULT_MIN_BUFFER_MS;
         int maxBufferMs = fast ? 50_000 : DefaultLoadControl.DEFAULT_MAX_BUFFER_MS;
         int playbackBufferMs = fast ? 500 : (isStory ? 1000 : 100);
         int rebufferMs = fast ? 1500 : (isStory ? 1000 : DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS);
