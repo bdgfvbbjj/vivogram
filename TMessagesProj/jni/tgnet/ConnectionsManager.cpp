@@ -2209,7 +2209,7 @@ void ConnectionsManager::failNotRunningRequest(int32_t token) {
                 if (LOGS_ENABLED) DEBUG_D("cancelled queued rpc request %p - %s", request->rawRequest, typeid(*request->rawRequest).name());
                 requestsQueue.erase(iter);
                 removeRequestFromGuid(token);
-                return true;
+                return;
             }
         }
     });
@@ -3284,7 +3284,7 @@ std::string base64UrlDecode(std::string base64) {
         size_t left = std::min(base64.size() - i, static_cast<size_t>(4));
         int c = 0;
         for (size_t t = 0; t < left; t++) {
-            auto value = url_char_to_value[base64.c_str()[i++]];
+            auto value = url_char_to_value[static_cast<unsigned char>(base64.c_str()[i++])];
             if (value == 64) {
                 return "";
             }

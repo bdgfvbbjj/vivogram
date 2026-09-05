@@ -550,7 +550,7 @@ void NativeByteBuffer::readBytes(uint8_t *b, uint32_t length, bool *error) {
 
 ByteArray *NativeByteBuffer::readBytes(uint32_t length, bool *error) {
     if (length == 0) {
-        return new ByteArray(0);
+        return new ByteArray((uint32_t) 0);
     }
     if (length > _limit - _position || calculateSizeOnly || buffer == nullptr || length > 32 * 1024 * 1024) {
         if (error != nullptr) {
