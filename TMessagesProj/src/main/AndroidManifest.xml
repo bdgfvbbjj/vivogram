@@ -110,6 +110,7 @@
         tools:replace="android:supportsRtl"
         android:usesCleartextTraffic="true"
         android:enableOnBackInvokedCallback="true"
+        android:allowNativeHeapPointerTagging="false"
     >
         <!-- usesCleartextTraffic for browser supporting opening http:// links -->
 
