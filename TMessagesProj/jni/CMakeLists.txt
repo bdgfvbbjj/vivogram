@@ -171,7 +171,7 @@ target_compile_options(${NATIVE_LIB} PUBLIC
         -ffast-math -Oz -funroll-loops -ffast-math -fno-strict-aliasing -fno-math-errno)
 
 target_compile_definitions(${NATIVE_LIB} PUBLIC
-        BSD=1 SOCKLEN_T=socklen_t ANDROID_NDK __STDC_CONSTANT_MACROS OPUS_BUILD FIXED_POINT USE_ALLOCA HAVE_LRINT HAVE_LRINTF)
+        BSD=1 SOCKLEN_T=socklen_t ANDROID_NDK __STDC_CONSTANT_MACROS OPUS_BUILD FIXED_POINT USE_ALLOCA HAVE_LRINT HAVE_LRINTF _EMX_)
 
 target_sources(${NATIVE_LIB} PRIVATE
 
