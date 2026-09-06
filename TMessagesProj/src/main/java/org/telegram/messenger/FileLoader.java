@@ -11,7 +11,6 @@ package org.telegram.messenger;
 import android.text.TextUtils;
 import android.util.SparseArray;
 
-import org.telegram.messenger.vivogram.VivogramConfig;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
@@ -33,14 +32,11 @@ import java.util.regex.Pattern;
 
 public class FileLoader extends BaseController {
 
-    public static final int PRIORITY_STREAM = 4;
+    private static final int PRIORITY_STREAM = 4;
     public static final int PRIORITY_HIGH = 3;
     public static final int PRIORITY_NORMAL_UP = 2;
     public static final int PRIORITY_NORMAL = 1;
     public static final int PRIORITY_LOW = 0;
-
-    public static final int MAX_FILE_LOADERS = 8;
-    public static final int MAX_FILE_CONCURRENT_CHUNKS = 8;
 
     private int priorityIncreasePointer;
 
@@ -296,9 +292,7 @@ public class FileLoader extends BaseController {
         String key = getAttachFileName(document);
         String dKey = key + (player ? "p" : "");
         loadingVideos.put(dKey, true);
-        AndroidUtilities.runOnUIThread(() -> {
-            getNotificationCenter().postNotificationName(NotificationCenter.videoLoadingStateChanged, key);
-        });
+        getNotificationCenter().postNotificationName(NotificationCenter.videoLoadingStateChanged, key);
     }
 
     public void setLoadingVideo(TLRPC.Document document, boolean player, boolean schedule) {
@@ -319,9 +313,7 @@ public class FileLoader extends BaseController {
         String key = getAttachFileName(document);
         if (loadingVideos.containsKey(key + (player ? "" : "p"))) {
             loadingVideos.put(key + (player ? "p" : ""), true);
-            AndroidUtilities.runOnUIThread(() -> {
-                getNotificationCenter().postNotificationName(NotificationCenter.videoLoadingStateChanged, key);
-            });
+            getNotificationCenter().postNotificationName(NotificationCenter.videoLoadingStateChanged, key);
         }
     }
 
@@ -329,9 +321,7 @@ public class FileLoader extends BaseController {
         String key = getAttachFileName(document);
         String dKey = key + (player ? "p" : "");
         if (loadingVideos.remove(dKey) != null) {
-            AndroidUtilities.runOnUIThread(() -> {
-                getNotificationCenter().postNotificationName(NotificationCenter.videoLoadingStateChanged, key);
-            });
+            getNotificationCenter().postNotificationName(NotificationCenter.videoLoadingStateChanged, key);
         }
     }
 
@@ -434,8 +424,7 @@ public class FileLoader extends BaseController {
             }
             FileUploadOperation operation = new FileUploadOperation(currentAccount, location, encrypted, esimated, type);
             if (delegate != null && estimatedSize != 0) {
-                final FileLoaderDelegate d = delegate;
-                AndroidUtilities.runOnUIThread(() -> d.fileUploadProgressChanged(operation, location, 0, estimatedSize, encrypted));
+                delegate.fileUploadProgressChanged(operation, location, 0, estimatedSize, encrypted);
             }
             if (encrypted) {
                 uploadOperationPathsEnc.put(location, operation);
@@ -473,9 +462,8 @@ public class FileLoader extends BaseController {
                                 }
                             }
                         }
-                        final FileLoaderDelegate d = delegate;
-                        if (d != null) {
-                            AndroidUtilities.runOnUIThread(() -> d.fileDidUploaded(location, inputFile, inputEncryptedFile, key, iv, operation.getTotalFileSize()));
+                        if (delegate != null) {
+                            delegate.fileDidUploaded(location, inputFile, inputEncryptedFile, key, iv, operation.getTotalFileSize());
                         }
                     });
                 }
@@ -488,9 +476,8 @@ public class FileLoader extends BaseController {
                         } else {
                             uploadOperationPaths.remove(location);
                         }
-                        final FileLoaderDelegate d = delegate;
-                        if (d != null) {
-                            AndroidUtilities.runOnUIThread(() -> d.fileDidFailedUpload(location, encrypted));
+                        if (delegate != null) {
+                            delegate.fileDidFailedUpload(location, encrypted);
                         }
                         if (small) {
                             currentUploadSmallOperationsCount--;
@@ -516,9 +503,8 @@ public class FileLoader extends BaseController {
 
                 @Override
                 public void didChangedUploadProgress(FileUploadOperation operation, long uploadedSize, long totalSize) {
-                    final FileLoaderDelegate d = delegate;
-                    if (d != null) {
-                        AndroidUtilities.runOnUIThread(() -> d.fileUploadProgressChanged(operation, location, uploadedSize, totalSize, encrypted));
+                    if (delegate != null) {
+                        delegate.fileUploadProgressChanged(operation, location, uploadedSize, totalSize, encrypted);
                     }
                 }
             });
@@ -1033,9 +1019,8 @@ public class FileLoader extends BaseController {
 
                 if (!operation.isPreloadVideoOperation()) {
                     loadOperationPathsUI.remove(fileName);
-                    final FileLoaderDelegate d = delegate;
-                    if (d != null) {
-                        AndroidUtilities.runOnUIThread(() -> d.fileDidLoaded(fileName, finalFile, parentObject, finalType));
+                    if (delegate != null) {
+                        delegate.fileDidLoaded(fileName, finalFile, parentObject, finalType);
                     }
                 }
 
@@ -1046,23 +1031,21 @@ public class FileLoader extends BaseController {
             public void didFailedLoadingFile(FileLoadOperation operation, int reason) {
                 loadOperationPathsUI.remove(fileName);
                 checkDownloadQueue(operation, operation.getQueue());
-                final FileLoaderDelegate d = delegate;
-                if (d != null) {
-                    AndroidUtilities.runOnUIThread(() -> d.fileDidFailedLoad(fileName, reason));
+                if (delegate != null) {
+                    delegate.fileDidFailedLoad(fileName, reason);
                 }
 
                 if (document != null && parentObject instanceof MessageObject && reason == 0) {
-                    AndroidUtilities.runOnUIThread(() -> getDownloadController().onDownloadFail((MessageObject) parentObject, reason));
+                    getDownloadController().onDownloadFail((MessageObject) parentObject, reason);
                 } else if (reason == -1) {
-                    AndroidUtilities.runOnUIThread(() -> LaunchActivity.checkFreeDiscSpaceStatic(2));
+                    LaunchActivity.checkFreeDiscSpaceStatic(2);
                 }
             }
 
             @Override
             public void didChangedLoadProgress(FileLoadOperation operation, long uploadedSize, long totalSize) {
-                final FileLoaderDelegate d = delegate;
-                if (d != null) {
-                    AndroidUtilities.runOnUIThread(() -> d.fileLoadProgressChanged(operation, fileName, uploadedSize, totalSize));
+                if (delegate != null) {
+                    delegate.fileLoadProgressChanged(operation, fileName, uploadedSize, totalSize);
                 }
             }
 
@@ -1093,7 +1076,7 @@ public class FileLoader extends BaseController {
         }
 
         loaderQueue.add(operation);
-        loaderQueue.checkLoadingOperations(operation.isStory && priority >= FileLoaderPriorityQueue.PRIORITY_VALUE_MAX || stream != null || VivogramConfig.isFastDownload());
+        loaderQueue.checkLoadingOperations(operation.isStory && priority >= FileLoaderPriorityQueue.PRIORITY_VALUE_MAX);
 
         if (BuildVars.LOGS_ENABLED) {
             FileLog.d("create load operation fileName=" + finalFileName + " documentName=" + getDocumentFileName(document) + " size=" + AndroidUtilities.formatFileSize(operation.totalBytesCount) + " position in queue " + operation.getPositionInQueue() + " account=" + currentAccount + " cacheType=" + cacheType + " priority=" + operation.getPriority() + " stream=" + stream);
@@ -1195,10 +1178,8 @@ public class FileLoader extends BaseController {
     protected FileLoadOperation loadStreamFile(final FileLoadOperationStream stream, final TLRPC.Document document, final ImageLocation location, final Object parentObject, final long offset, final boolean priority, int loadingPriority, int cacheType) {
         final CountDownLatch semaphore = new CountDownLatch(1);
         final FileLoadOperation[] result = new FileLoadOperation[1];
-        final boolean finalPriority = priority || VivogramConfig.isFastDownload();
-        final int finalLoadingPriority = VivogramConfig.isFastDownload() ? PRIORITY_STREAM : loadingPriority;
         fileLoaderQueue.postRunnable(() -> {
-            result[0] = loadFileInternal(document, null, null, document == null && location != null ? location.location : null, location, parentObject, document == null && location != null ? "mp4" : null, document == null && location != null ? location.currentSize : 0, finalLoadingPriority, stream, offset, finalPriority, cacheType);
+            result[0] = loadFileInternal(document, null, null, document == null && location != null ? location.location : null, location, parentObject, document == null && location != null ? "mp4" : null, document == null && location != null ? location.currentSize : 0, loadingPriority, stream, offset, priority, cacheType);
             semaphore.countDown();
         });
         awaitFileLoadOperation(semaphore, true);
