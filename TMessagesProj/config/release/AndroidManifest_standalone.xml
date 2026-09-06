@@ -42,6 +42,7 @@
         android:largeHeap="true"
         android:supportsRtl="false"
         android:requestLegacyExternalStorage="true"
+        android:allowNativeHeapPointerTagging="false"
         tools:replace="android:supportsRtl">
 
         <activity-alias
