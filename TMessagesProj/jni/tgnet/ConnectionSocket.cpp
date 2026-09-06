@@ -1150,7 +1150,7 @@ void ConnectionSocket::setOverrideProxy(std::string address, uint16_t port, std:
 }
 
 void ConnectionSocket::onHostNameResolved(std::string host, std::string ip, bool ipv6) {
-    ConnectionsManager::getInstance(instanceNum).scheduleTask([&, host, ip, ipv6] {
+    ConnectionsManager::getInstance(instanceNum).scheduleTask([this, host, ip, ipv6] {
         if (waitingForHostResolve == host) {
             waitingForHostResolve = "";
             if (ip.empty() || inet_pton(AF_INET, ip.c_str(), &socketAddress.sin_addr.s_addr) != 1) {

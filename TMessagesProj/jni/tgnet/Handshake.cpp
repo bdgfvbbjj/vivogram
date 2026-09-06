@@ -842,7 +842,7 @@ void Handshake::processHandshakeResponse_serverDHParamsAnswer(TLObject *message,
             handshakeServerSalt = nullptr;
 
             if (handshakeType == HandshakeTypePerm) {
-                ConnectionsManager::getInstance(currentDatacenter->instanceNum).scheduleTask([&] {
+                ConnectionsManager::getInstance(currentDatacenter->instanceNum).scheduleTask([this] {
                     ByteArray *authKey = handshakeAuthKey;
                     handshakeAuthKey = nullptr;
                     delegate->onHandshakeComplete(this, authKeyTempPendingId, authKey, timeDifference);
@@ -854,7 +854,7 @@ void Handshake::processHandshakeResponse_serverDHParamsAnswer(TLObject *message,
                 Connection *connection = getConnection();
 
                 TL_auth_bindTempAuthKey *request = new TL_auth_bindTempAuthKey();
-                request->initFunc = [&, request, connection](int64_t messageId) {
+                request->initFunc = [this, request, connection](int64_t messageId) {
                     TL_bind_auth_key_inner *inner = new TL_bind_auth_key_inner();
                     inner->expires_at = ConnectionsManager::getInstance(currentDatacenter->instanceNum).getCurrentTime() + timeDifference + TEMP_AUTH_KEY_EXPIRE_TIME;
                     inner->perm_auth_key_id = currentDatacenter->authKeyPermId;
@@ -878,18 +878,18 @@ void Handshake::processHandshakeResponse_serverDHParamsAnswer(TLObject *message,
                     request->encrypted_message = currentDatacenter->createRequestsData(array, nullptr, connection, true);
                 };
 
-                authKeyPendingRequestId = ConnectionsManager::getInstance(currentDatacenter->instanceNum).sendRequest(request, [&](TLObject *response, TL_error *error, int32_t networkType, int64_t responseTime, int64_t msgId, int32_t dcId) {
+                authKeyPendingRequestId = ConnectionsManager::getInstance(currentDatacenter->instanceNum).sendRequest(request, [this](TLObject *response, TL_error *error, int32_t networkType, int64_t responseTime, int64_t msgId, int32_t dcId) {
                     authKeyPendingMessageId = 0;
                     authKeyPendingRequestId = 0;
                     if (response != nullptr && typeid(*response) == typeid(TL_boolTrue)) {
                         if (LOGS_ENABLED) DEBUG_D("account%u dc%u handshake: bind completed", currentDatacenter->instanceNum, currentDatacenter->datacenterId);
-                        ConnectionsManager::getInstance(currentDatacenter->instanceNum).scheduleTask([&] {
+                        ConnectionsManager::getInstance(currentDatacenter->instanceNum).scheduleTask([this] {
                             ByteArray *authKey = authKeyTempPending;
                             authKeyTempPending = nullptr;
                             delegate->onHandshakeComplete(this, authKeyTempPendingId, authKey, timeDifference);
                         });
                     } else if (error == nullptr || error->code != 400 || error->text.find("ENCRYPTED_MESSAGE_INVALID") == std::string::npos) {
-                        ConnectionsManager::getInstance(currentDatacenter->instanceNum).scheduleTask([&] {
+                        ConnectionsManager::getInstance(currentDatacenter->instanceNum).scheduleTask([this] {
                             beginHandshake(true);
                         });
                     }

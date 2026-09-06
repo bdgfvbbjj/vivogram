@@ -240,6 +240,7 @@ JNIEXPORT jlong Java_org_telegram_SQLite_SQLiteCursor_columnByteBufferValue(JNIE
     }
     const char *buf = (const char *) sqlite3_column_blob(handle, columnIndex);
     if (buf == nullptr) {
+        buffer->reuse();
         return 0;
     }
     memcpy(buffer->bytes(), buf, length);

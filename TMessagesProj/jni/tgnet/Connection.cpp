@@ -28,7 +28,7 @@ Connection::Connection(Datacenter *datacenter, ConnectionType type, int8_t num) 
     connectionType = type;
     genereateNewSessionId();
     connectionState = TcpConnectionStageIdle;
-    reconnectTimer = new Timer(datacenter->instanceNum, [&] {
+    reconnectTimer = new Timer(datacenter->instanceNum, [this] {
         reconnectTimer->stop();
         waitForReconnectTimer = false;
         connect();
@@ -724,7 +724,7 @@ void Connection::onDisconnectedInternal(int32_t reason, int32_t error) {
 
 void Connection::onDisconnected(int32_t reason, int32_t error) {
     if (connectionInProcess) {
-        ConnectionsManager::getInstance(currentDatacenter->instanceNum).scheduleTask([&, reason, error] {
+        ConnectionsManager::getInstance(currentDatacenter->instanceNum).scheduleTask([this, reason, error] {
             onDisconnectedInternal(reason, error);
         });
     } else {

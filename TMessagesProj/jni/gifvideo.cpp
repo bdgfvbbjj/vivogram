@@ -67,21 +67,26 @@ typedef struct VideoInfo {
             src = nullptr;
         }
         if (stream != nullptr) {
-            JNIEnv *jniEnv = nullptr;
-            JavaVMAttachArgs jvmArgs;
-            jvmArgs.version = JNI_VERSION_1_6;
+            if (javaVm != nullptr) {
+                JNIEnv *jniEnv = nullptr;
+                JavaVMAttachArgs jvmArgs;
+                jvmArgs.version = JNI_VERSION_1_6;
+                jvmArgs.name = nullptr;
+                jvmArgs.group = nullptr;
 
-            bool attached;
-            if (JNI_EDETACHED == javaVm->GetEnv((void **) &jniEnv, JNI_VERSION_1_6)) {
-                javaVm->AttachCurrentThread(&jniEnv, &jvmArgs);
-                attached = true;
-            } else {
-                attached = false;
-            }
-            DEBUG_DELREF("gifvideo.cpp stream");
-            jniEnv->DeleteGlobalRef(stream);
-            if (attached) {
-                javaVm->DetachCurrentThread();
+                bool attached = false;
+                if (JNI_EDETACHED == javaVm->GetEnv((void **) &jniEnv, JNI_VERSION_1_6)) {
+                    if (javaVm->AttachCurrentThread(&jniEnv, &jvmArgs) == JNI_OK) {
+                        attached = true;
+                    }
+                }
+                DEBUG_DELREF("gifvideo.cpp stream");
+                if (jniEnv != nullptr) {
+                    jniEnv->DeleteGlobalRef(stream);
+                }
+                if (attached) {
+                    javaVm->DetachCurrentThread();
+                }
             }
             stream = nullptr;
         }
@@ -1001,6 +1006,7 @@ extern "C" JNIEXPORT jint JNICALL Java_org_telegram_ui_Components_AnimatedFileNa
 }
 
 extern "C" jint videoOnJNILoad(JavaVM *vm, JNIEnv *env) {
+    javaVm = vm;
     //av_log_set_callback(custom_log);
     DEBUG_REF("gifvideo.cpp AnimatedFileDrawableStream ref");
     jclass_AnimatedFileDrawableStream = (jclass) env->NewGlobalRef(env->FindClass("org/telegram/messenger/AnimatedFileDrawableStream"));
