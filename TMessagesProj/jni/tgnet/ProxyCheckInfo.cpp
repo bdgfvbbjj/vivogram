@@ -14,7 +14,24 @@ ProxyCheckInfo::~ProxyCheckInfo() {
 #ifdef ANDROID
     if (ptr1 != nullptr) {
         DEBUG_DELREF("tgnet (2) request ptr1");
-        jniEnv[instanceNum]->DeleteGlobalRef(ptr1);
+        if (javaVm != nullptr) {
+            JNIEnv *env = nullptr;
+            bool attached = false;
+            jint res = javaVm->GetEnv((void **) &env, JNI_VERSION_1_6);
+            if (res == JNI_EDETACHED) {
+                if (javaVm->AttachCurrentThread(&env, nullptr) == JNI_OK) {
+                    attached = true;
+                } else {
+                    env = nullptr;
+                }
+            }
+            if (env != nullptr) {
+                env->DeleteGlobalRef(ptr1);
+            }
+            if (attached) {
+                javaVm->DetachCurrentThread();
+            }
+        }
         ptr1 = nullptr;
     }
 #endif
