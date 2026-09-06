@@ -5,14 +5,22 @@
 #include "tgnet/BuffersStorage.h"
 
 void throw_sqlite3_exception(JNIEnv *env, sqlite3 *handle, int errcode) {
-    const char *errmsg = sqlite3_errmsg(handle);
+    const char *errmsg = handle != nullptr ? sqlite3_errmsg(handle) : nullptr;
+    if (errmsg == nullptr) {
+        errmsg = sqlite3_errstr(errcode);
+    }
     jclass exClass = env->FindClass("org/telegram/SQLite/SQLiteException");
-    env->ThrowNew(exClass, errmsg);
+    if (exClass != nullptr) {
+        env->ThrowNew(exClass, errmsg != nullptr ? errmsg : "SQLite error");
+    }
 }
 
 extern "C" {
 
 JNIEXPORT jint Java_org_telegram_SQLite_SQLitePreparedStatement_step(JNIEnv *env, jobject object, jlong statementHandle) {
+    if (statementHandle == 0) {
+        return -1;
+    }
     sqlite3_stmt *handle = (sqlite3_stmt *) (intptr_t) statementHandle;
 
     int errcode = sqlite3_step(handle);
@@ -29,11 +37,15 @@ JNIEXPORT jint Java_org_telegram_SQLite_SQLitePreparedStatement_step(JNIEnv *env
 }
 
 JNIEXPORT jlong Java_org_telegram_SQLite_SQLitePreparedStatement_prepare(JNIEnv *env, jobject object, jlong sqliteHandle, jstring sql) {
+    if (sqliteHandle == 0) {
+        throw_sqlite3_exception(env, nullptr, SQLITE_MISUSE);
+        return 0;
+    }
     sqlite3 *handle = (sqlite3 *) (intptr_t) sqliteHandle;
 
     char const *sqlStr = env->GetStringUTFChars(sql, 0);
 
-    sqlite3_stmt *stmt_handle;
+    sqlite3_stmt *stmt_handle = nullptr;
 
     int errcode = sqlite3_prepare_v2(handle, sqlStr, -1, &stmt_handle, 0);
     if (SQLITE_OK != errcode) {
